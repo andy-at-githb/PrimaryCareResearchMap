@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Primary Care Research Map UK - GP Level</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">Primary Care Research Map UK</p>
+          <h1>GP-Level Hub and Spoke Explorer</h1>
+          <p class="intro">
+            Enter a GP practice name to verify it against the current NHS England Digital GP-practice mapping snapshot,
+            extract its postcode, and map it to the nearest regional research hub.
+          </p>
+        </div>
+      </header>
+
+      <section class="control-panel">
+        <label class="field">
+          <span>GP practice name</span>
+          <input id="practice-input" list="practice-options" placeholder="Type a GP practice name" autocomplete="off" />
+          <datalist id="practice-options"></datalist>
+          <p class="field-note">This is the main input. The app verifies the practice against the official NHS England Digital GP-practice mapping snapshot.</p>
+        </label>
+
+        <label class="field">
+          <span>Optional postcode override</span>
+          <input id="postcode-input" placeholder="Optional: enter a postcode" autocomplete="off" />
+          <div class="field-actions">
+            <button id="resolve-button" type="button">Verify practice and map hub</button>
+            <a id="nhs-link" class="inline-link" href="https://www.nhs.uk/service-search/find-a-gp/" target="_blank">Open NHS Find a GP</a>
+          </div>
+          <p class="field-note">Leave blank to use the postcode extracted from the verified practice snapshot. Use this only if you want to override the location used for hub matching.</p>
+        </label>
+
+        <div class="status-card">
+          <p class="status-label">Mapped hub</p>
+          <p id="status-hub" class="status-value">Waiting for verification</p>
+          <p id="status-detail" class="status-detail">Enter a GP practice name and run the verification step.</p>
+        </div>
+      </section>
+
+      <section class="summary-strip">
+        <article class="summary-card">
+          <div class="card-heading">
+            <p class="eyebrow">GP Practice Verification</p>
+          </div>
+          <dl class="summary-grid">
+            <div>
+              <dt>Entered practice</dt>
+              <dd id="summary-entered">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Verified practice</dt>
+              <dd id="summary-verified">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Practice code</dt>
+              <dd id="summary-code">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Postcode used</dt>
+              <dd id="summary-postcode">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Nearest hub</dt>
+              <dd id="summary-hub">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Approximate distance</dt>
+              <dd id="summary-distance">Not verified yet</dd>
+            </div>
+            <div class="summary-span-2">
+              <dt>Verification source</dt>
+              <div class="summary-source-row">
+                <dd id="summary-source">Waiting for verification</dd>
+                <button id="refresh-dataset-button" class="secondary-button" type="button">Check for newer NHS snapshot</button>
+              </div>
+            </div>
+          </dl>
+        </article>
+      </section>
+
+      <main class="app-layout">
+        <section class="diagram-panel">
+          <svg id="diagram" viewBox="0 0 1600 1040" role="img" aria-label="GP-level hub and spoke diagram">
+            <rect x="0" y="0" width="1600" height="1040" fill="#f4f1ea" />
+            <g id="diagram-lines"></g>
+            <g id="diagram-nodes"></g>
+          </svg>
+        </section>
+
+        <aside class="legend-panel">
+          <div class="legend-header">
+            <p class="eyebrow">Regional hubs</p>
+            <h2>Numbered directory</h2>
+            <p>
+              The verified local hub is highlighted in the diagram and in this list. Blue text indicates the associated linked practice site.
+            </p>
+          </div>
+          <ol id="hub-legend" class="hub-legend"></ol>
+        </aside>
+      </main>
+
+      <footer class="page-footer">
+        <p>Dr A Fairbairn Oxford University PC-CTU April 2026</p>
+      </footer>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
