@@ -9,7 +9,13 @@ const execFileAsync = promisify(execFile);
 const fsp = fs.promises;
 
 const PORT = process.env.PORT || 8000;
-const HOST = process.env.HOST || '127.0.0.1';
+const RUNNING_ON_RENDER = Boolean(
+  process.env.RENDER
+  || process.env.RENDER_EXTERNAL_URL
+  || process.env.RENDER_SERVICE_ID
+  || process.env.RENDER_SERVICE_NAME,
+);
+const HOST = process.env.HOST || (RUNNING_ON_RENDER ? '0.0.0.0' : '127.0.0.1');
 const ROOT = __dirname;
 const DATA_DIR = path.join(ROOT, 'data');
 const POSTCODE_API = 'https://api.postcodes.io/postcodes/';
@@ -38,25 +44,179 @@ const MONTH_NAME_TO_NUMBER = new Map(
   MONTH_NAMES.map((name, index) => [name.toLowerCase(), String(index + 1).padStart(2, '0')]),
 );
 
-const hubRecords = [
-  { id: 1, hubName: 'Regional Research Hub 1', site: 'The Adam Practice, Poole, Dorset', url: 'https://www.adampractice.co.uk/', lat: 50.7192, lon: -1.9819 },
-  { id: 2, hubName: 'Regional Research Hub 2', site: 'Ashton Medical Group, Ashton-Under-Lyne, Lancashire', url: 'https://www.ashtonmedicalgroup.co.uk/', lat: 53.4899, lon: -2.0941 },
-  { id: 3, hubName: 'Regional Research Hub 3', site: 'The Garth Surgery, Guisborough, Cleveland', url: 'https://www.thegarthsurgery.nhs.uk/', lat: 54.5348, lon: -1.0564 },
-  { id: 4, hubName: 'Regional Research Hub 4', site: 'Grove Surgery, Thetford, Norfolk', url: 'https://grovesurgerythetford.co.uk/', lat: 52.4140, lon: 0.7484 },
-  { id: 5, hubName: 'Regional Research Hub 5', site: 'Hounslow Medical Centre, Middlesex', url: 'https://www.hounslowmedicalcentre.co.uk/', lat: 51.4686, lon: -0.3613 },
-  { id: 6, hubName: 'Regional Research Hub 6', site: 'Layton Medical Centre, Blackpool, Lancashire', url: 'https://www.laytonmedicalcentre.co.uk/', lat: 53.8330, lon: -3.0357 },
-  { id: 7, hubName: 'Regional Research Hub 7', site: 'Marine Lake Medical Practice, West Kirby, Wirral', url: 'https://marinelakemedicalwirral.nhs.uk/', lat: 53.3733, lon: -3.1847 },
-  { id: 8, hubName: 'Regional Research Hub 8', site: 'Mereside Medical, Ely, Cambridgeshire', url: 'https://www.meresidemedical.nhs.uk/', lat: 52.3995, lon: 0.2624 },
-  { id: 9, hubName: 'Regional Research Hub 9', site: 'Pier Health Group, Weston-Super-Mare, North Somerset', url: 'https://pierhealth.co.uk/', lat: 51.3463, lon: -2.9778 },
-  { id: 10, hubName: 'Regional Research Hub 10', site: 'Rame Group Practice, Torpoint, Cornwall', url: 'https://theramegrouppractice.co.uk/', lat: 50.3778, lon: -4.1957 },
-  { id: 11, hubName: 'Regional Research Hub 11', site: 'The University of Nottingham Health Service, Nottingham', url: 'https://www.unhs.co.uk/', lat: 52.9386, lon: -1.1953 },
-  { id: 12, hubName: 'Regional Research Hub 12', site: 'Wansford Surgery, Wansford, Peterborough', url: 'https://www.wansfordsurgery.co.uk/', lat: 52.5748, lon: -0.4182 },
-  { id: 13, hubName: 'Regional Research Hub 13', site: 'West Walk Surgery, Yate, Bristol', url: 'https://www.westwalksurgery.co.uk/', lat: 51.5406, lon: -2.4184 },
-  { id: 14, hubName: 'Regional Research Hub 14', site: 'Windrush Medical Practice, Witney, Oxfordshire', url: 'https://www.windrushmedicalpractice.co.uk/', lat: 51.7850, lon: -1.4854 },
+const pcHubRecords = [
+  { id: 1, hubName: 'PC-CRDC 1', site: 'The Adam Practice, Poole, Dorset', url: 'https://www.adampractice.co.uk/', lat: 50.7192, lon: -1.9819 },
+  { id: 2, hubName: 'PC-CRDC 2', site: 'Ashton Medical Group, Ashton-Under-Lyne, Lancashire', url: 'https://www.ashtonmedicalgroup.co.uk/', lat: 53.4899, lon: -2.0941 },
+  { id: 3, hubName: 'PC-CRDC 3', site: 'The Garth Surgery, Guisborough, Cleveland', url: 'https://www.thegarthsurgery.nhs.uk/', lat: 54.5348, lon: -1.0564 },
+  { id: 4, hubName: 'PC-CRDC 4', site: 'Grove Surgery, Thetford, Norfolk', url: 'https://grovesurgerythetford.co.uk/', lat: 52.4140, lon: 0.7484 },
+  { id: 5, hubName: 'PC-CRDC 5', site: 'Hounslow Medical Centre, Middlesex', url: 'https://www.hounslowmedicalcentre.co.uk/', lat: 51.4686, lon: -0.3613 },
+  { id: 6, hubName: 'PC-CRDC 6', site: 'Layton Medical Centre, Blackpool, Lancashire', url: 'https://www.laytonmedicalcentre.co.uk/', lat: 53.8330, lon: -3.0357 },
+  { id: 7, hubName: 'PC-CRDC 7', site: 'Marine Lake Medical Practice, West Kirby, Wirral', url: 'https://marinelakemedicalwirral.nhs.uk/', lat: 53.3733, lon: -3.1847 },
+  { id: 8, hubName: 'PC-CRDC 8', site: 'Mereside Medical, Ely, Cambridgeshire', url: 'https://www.meresidemedical.nhs.uk/', lat: 52.3995, lon: 0.2624 },
+  { id: 9, hubName: 'PC-CRDC 9', site: 'Pier Health Group, Weston-Super-Mare, North Somerset', url: 'https://pierhealth.co.uk/', lat: 51.3463, lon: -2.9778 },
+  { id: 10, hubName: 'PC-CRDC 10', site: 'Rame Group Practice, Torpoint, Cornwall', url: 'https://theramegrouppractice.co.uk/', lat: 50.3778, lon: -4.1957 },
+  { id: 11, hubName: 'PC-CRDC 11', site: 'The University of Nottingham Health Service, Nottingham', url: 'https://www.unhs.co.uk/', lat: 52.9386, lon: -1.1953 },
+  { id: 12, hubName: 'PC-CRDC 12', site: 'Wansford Surgery, Wansford, Peterborough', url: 'https://www.wansfordsurgery.co.uk/', lat: 52.5748, lon: -0.4182 },
+  { id: 13, hubName: 'PC-CRDC 13', site: 'West Walk Surgery, Yate, Bristol', url: 'https://www.westwalksurgery.co.uk/', lat: 51.5406, lon: -2.4184 },
+  { id: 14, hubName: 'PC-CRDC 14', site: 'Windrush Medical Practice, Witney, Oxfordshire', url: 'https://www.windrushmedicalpractice.co.uk/', lat: 51.7850, lon: -1.4854 },
+];
+
+const scHubRecords = [
+  {
+    id: 1,
+    hubName: 'SC-CRDC 1',
+    site: 'NIHR Cheshire and Merseyside CRDC',
+    address: 'Royal Liverpool University Hospital, Mount Vernon Street, Liverpool, L7 8XP',
+    postcode: 'L7 8XP',
+    url: 'https://www.uhliverpool.nhs.uk/about-us/research/https-www-uhliverpool-nhs-uk-about-us-research-nihr-cheshire-and-merseyside-commercial-research-delivery-centre-crdc',
+    lat: 50.7192,
+    lon: -1.9819,
+  },
+  {
+    id: 2,
+    hubName: 'SC-CRDC 2',
+    site: 'NIHR Blackpool CRDC',
+    address: 'Clinical Research Centre, Whinney Heys Road, Blackpool, FY3 8NR',
+    postcode: 'FY3 8NR',
+    url: 'https://www.blackpoolteachinghospitals.nhs.uk/about-us/latest-news/gbp35m-funding-means-future-bright-blackpool-teaching-hospitals-research-ambitions',
+    lat: 53.4899,
+    lon: -2.0941,
+  },
+  {
+    id: 3,
+    hubName: 'SC-CRDC 3',
+    site: 'NIHR Bradford and West Yorkshire CRDC',
+    address: 'Bradford Institute for Health Research, Temple Bank House, Bradford Royal Infirmary, Duckworth Lane, Bradford, BD9 6RJ',
+    postcode: 'BD9 6RJ',
+    url: 'https://bradfordresearch.nhs.uk/researcharea/nihr-bradford-west-yorkshire-crdc/',
+    lat: 54.5348,
+    lon: -1.0564,
+  },
+  {
+    id: 4,
+    hubName: 'SC-CRDC 4',
+    site: 'NIHR Central and North West Midlands CRDC',
+    address: "Birmingham Women's and Children's NHS Foundation Trust, Birmingham Children's Hospital, Steelhouse Lane, Birmingham, West Midlands, B4 6NH",
+    postcode: 'B4 6NH',
+    url: 'https://www.birminghamhealthpartners.co.uk/central-and-north-west-midlands-awarded-prestigious-nihr-commercial-research-delivery-centre/',
+    lat: 52.4140,
+    lon: 0.7484,
+  },
+  {
+    id: 5,
+    hubName: 'SC-CRDC 5',
+    site: 'NIHR Cornwall and Isles of Scilly CRDC',
+    address: 'Royal Cornwall Hospitals NHS Trust, Royal Cornwall Hospital, Treliske, Truro, Cornwall, TR1 3LJ',
+    postcode: 'TR1 3LJ',
+    url: 'https://royalcornwallhospitals.nhs.uk/organisation/research-and-development/cornwall-and-isles-of-scilly-commercial-research-delivery-centre-cios-crdc/',
+    lat: 51.4686,
+    lon: -0.3613,
+  },
+  {
+    id: 6,
+    hubName: 'SC-CRDC 6',
+    site: 'NIHR Greater Manchester CRDC',
+    address: 'Manchester University NHS Foundation Trust, Cobbett House, Oxford Road, Manchester, M13 9WL',
+    postcode: 'M13 9WL',
+    url: 'https://research.cmft.nhs.uk/news-events/greater-manchester-to-benefit-from-4-7-million-research-boost-to-unlock-cutting-edge-health-treatments',
+    lat: 53.8330,
+    lon: -3.0357,
+  },
+  {
+    id: 7,
+    hubName: 'SC-CRDC 7',
+    site: 'NIHR Leicestershire and Northamptonshire CRDC',
+    address: 'Leicester General Hospital, Gwendolen Road, Leicester, LE5 4PW',
+    postcode: 'LE5 4PW',
+    url: 'https://www.uhleicester.nhs.uk/research/facilities/nihr-commercial-research-delivery-centre-crdc/',
+    lat: 53.3733,
+    lon: -3.1847,
+  },
+  {
+    id: 8,
+    hubName: 'SC-CRDC 8',
+    site: 'NIHR London North West CRDC',
+    address: 'London North West University Healthcare NHS Trust, Northwick Park Hospital, Watford Road, Harrow, Middlesex, HA1 3UJ',
+    postcode: 'HA1 3UJ',
+    url: 'https://www.lnwh.nhs.uk/news/trusts-7m-grant-to-spearhead-research-into-21st-century-10970',
+    lat: 52.3995,
+    lon: 0.2624,
+  },
+  {
+    id: 9,
+    hubName: 'SC-CRDC 9',
+    site: 'NIHR Newcastle CRDC',
+    address: 'Royal Victoria Infirmary, Queen Victoria Road, Newcastle upon Tyne, NE1 4LP',
+    postcode: 'NE1 4LP',
+    url: 'https://diagnosticsnortheast.org.uk/team/nihr-commercial-research-delivery-centre-crdc-newcastle/',
+    lat: 51.3463,
+    lon: -2.9778,
+  },
+  {
+    id: 10,
+    hubName: 'SC-CRDC 10',
+    site: 'NIHR North East London CRDC',
+    address: 'The Royal London Hospital, Whitechapel Road, London, E1 1FR',
+    postcode: 'E1 1FR',
+    url: 'https://www.bartshealth.nhs.uk/news/latest-news-delivering-more-research-into-new-drugs-17171',
+    lat: 50.3778,
+    lon: -4.1957,
+  },
+  {
+    id: 11,
+    hubName: 'SC-CRDC 11',
+    site: 'NIHR North Midlands CRDC',
+    address: 'UHNM NHS Trust, Royal Stoke University Hospital, Newcastle Road, Stoke-on-Trent, ST4 6QG',
+    postcode: 'ST4 6QG',
+    url: 'https://www.uhnm.nhs.uk/research/the-north-midlands-commercial-research-delivery-centre-crdc/',
+    lat: 52.9386,
+    lon: -1.1953,
+  },
+  {
+    id: 12,
+    hubName: 'SC-CRDC 12',
+    site: "NIHR Sheffield Children's CRDC",
+    address: "Sheffield Children's NHS Foundation Trust, Western Bank, Sheffield, S10 2TH",
+    postcode: 'S10 2TH',
+    url: 'https://www.sheffieldchildrens.nhs.uk/news/sheffield-childrens-nhs-opens-new-commercial-research-delivery-centre/',
+    lat: 52.5748,
+    lon: -0.4182,
+  },
+  {
+    id: 13,
+    hubName: 'SC-CRDC 13',
+    site: 'NIHR South London CRDC',
+    address: "Guy's Hospital, Great Maze Pond, London, SE1 9RT",
+    postcode: 'SE1 9RT',
+    url: 'https://www.jointresearchoffice.org/working-partners/our-partners',
+    lat: 51.5406,
+    lon: -2.4184,
+  },
+  {
+    id: 14,
+    hubName: 'SC-CRDC 14',
+    site: 'NIHR Sussex CRDC',
+    address: 'University Hospitals Sussex NHS Foundation Trust, Worthing Hospital, Lyndhurst Road, Worthing, West Sussex, BN11 2DH',
+    postcode: 'BN11 2DH',
+    url: 'https://www.uhsussex.nhs.uk/research-and-innovation/nihr-commercial-research-delivery-centre-crdc-sussex/',
+    lat: 51.7850,
+    lon: -1.4854,
+  },
+  {
+    id: 15,
+    hubName: 'SC-CRDC 15',
+    site: 'NIHR Wessex CRDC',
+    address: 'Southampton Research Hub, Shirley Health Centre, Grove Road, Southampton, SO15 3UA',
+    postcode: 'SO15 3UA',
+    url: 'https://www.wessexresearchhubs.nhs.uk/',
+    lat: 50.7192,
+    lon: -1.9819,
+  },
 ];
 
 let practiceMap = [];
 let datasetRefreshPromise = null;
+let scHydrationPromise = null;
 
 const datasetState = {
   current: null,
@@ -77,6 +237,7 @@ const MIME = {
   '.js': 'application/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -107,7 +268,10 @@ function sendFile(res, filePath) {
       sendJson(res, 404, { error: 'Not found' });
       return;
     }
-    res.writeHead(200, { 'Content-Type': type });
+    res.writeHead(200, {
+      'Content-Type': type,
+      'Cache-Control': 'no-store',
+    });
     res.end(data);
   });
 }
@@ -217,6 +381,7 @@ function setCurrentDataset(filePath, metadata = {}) {
       practiceName: cols[idxName],
       fullPracticeName: cols[idxName],
       postcode: cols[idxPostcode],
+      normalizedPracticeName: normalizeName(cols[idxName] || ''),
     };
   }).filter((entry) => entry.practiceName && entry.postcode);
 
@@ -249,9 +414,9 @@ function initializePracticeDataset() {
   datasetState.refresh.message = `Loaded local snapshot ${current.publicationLabel}.`;
 }
 
-function scoreNameMatch(query, candidate) {
-  const q = normalizeName(query);
-  const c = normalizeName(candidate);
+function scoreNameMatch(queryNormalized, candidateNormalized) {
+  const q = queryNormalized;
+  const c = candidateNormalized;
   if (!q || !c) return 0;
   if (q === c) return 100;
   let score = 0;
@@ -264,15 +429,74 @@ function scoreNameMatch(query, candidate) {
   return score;
 }
 
-function verifyPracticeFromDataset(practiceName) {
+function buildPracticeCandidate(entry) {
+  return {
+    practiceName: entry.practiceName,
+    practiceCode: entry.practiceCode,
+    postcode: entry.postcode,
+  };
+}
+
+function createAmbiguousPracticeError(query, candidates) {
+  const error = new Error(`Multiple official GP practices matched "${query}". Choose one of the suggested practices to continue.`);
+  error.code = 'AMBIGUOUS_PRACTICE_MATCH';
+  error.candidates = candidates;
+  return error;
+}
+
+function maybeGetAmbiguousMatches(ranked, normalizedQuery) {
+  if (!ranked.length) return null;
+
+  const exactMatches = ranked.filter((entry) => entry.normalizedPracticeName === normalizedQuery);
+  if (exactMatches.length > 1) {
+    return exactMatches.slice(0, 6).map(buildPracticeCandidate);
+  }
+  if (exactMatches.length === 1) {
+    return null;
+  }
+
+  const bestScore = ranked[0].score;
+  if (bestScore < 55) {
+    return null;
+  }
+
+  const threshold = Math.max(67, bestScore - 8);
+  const closeMatches = ranked.filter((entry) => entry.score >= threshold).slice(0, 6);
+  return closeMatches.length > 1 ? closeMatches.map(buildPracticeCandidate) : null;
+}
+
+function verifyPracticeFromDataset(practiceName, { practiceCode = '' } = {}) {
   if (!practiceMap.length) {
     throw new Error('Practice dataset not loaded');
   }
 
+  if (practiceCode) {
+    const exactPractice = practiceMap.find((entry) => entry.practiceCode === practiceCode);
+    if (!exactPractice) {
+      throw new Error('Selected GP practice code was not found in the current dataset');
+    }
+    return {
+      verified: true,
+      title: exactPractice.practiceName,
+      address: exactPractice.practiceName,
+      postcode: exactPractice.postcode,
+      sourceUrl: datasetState.current?.publicationUrl || PRACTICE_SERIES_URL,
+      source: 'nhs-england-digital-gp-snapshot',
+      practiceCode: exactPractice.practiceCode,
+    };
+  }
+
+  const normalizedQuery = normalizeName(practiceName);
+
   const ranked = practiceMap
-    .map((entry) => ({ ...entry, score: scoreNameMatch(practiceName, entry.practiceName) }))
+    .map((entry) => ({ ...entry, score: scoreNameMatch(normalizedQuery, entry.normalizedPracticeName) }))
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score);
+
+  const ambiguousMatches = maybeGetAmbiguousMatches(ranked, normalizedQuery);
+  if (ambiguousMatches) {
+    throw createAmbiguousPracticeError(practiceName, ambiguousMatches);
+  }
 
   const best = ranked[0];
   if (!best || best.score < 55) {
@@ -299,8 +523,12 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return 2 * radiusKm * Math.asin(Math.sqrt(a));
 }
 
-function nearestHubForCoords(lat, lon) {
-  return hubRecords
+function nearestHubForCoords(records, lat, lon) {
+  const viable = records.filter((hub) => Number.isFinite(hub.lat) && Number.isFinite(hub.lon));
+  if (!viable.length) {
+    throw new Error('No hub coordinate data is available for matching');
+  }
+  return viable
     .map((hub) => ({ ...hub, distanceKm: haversineKm(lat, lon, hub.lat, hub.lon) }))
     .sort((a, b) => a.distanceKm - b.distanceKm)[0];
 }
@@ -312,6 +540,20 @@ async function geocodePostcode(postcode) {
     throw new Error(payload.error || 'Postcode lookup failed');
   }
   return payload.result;
+}
+
+async function hydrateHubCoordinates(records, label) {
+  await Promise.all(records.map(async (hub) => {
+    if (!hub.postcode) return;
+    try {
+      const geo = await geocodePostcode(hub.postcode);
+      hub.lat = geo.latitude;
+      hub.lon = geo.longitude;
+      hub.postcode = geo.postcode;
+    } catch (error) {
+      console.warn(`${label} coordinate lookup failed for ${hub.hubName}: ${error.message}`);
+    }
+  }));
 }
 
 async function fetchText(url) {
@@ -500,19 +742,22 @@ async function refreshPracticeDataset({ reason = 'manual' } = {}) {
 async function handleResolvePractice(res, parsedUrl) {
   const practice = parsedUrl.searchParams.get('practice')?.trim();
   const postcodeOverride = parsedUrl.searchParams.get('postcode')?.trim();
+  const practiceCode = parsedUrl.searchParams.get('practiceCode')?.trim();
   if (!practice) {
     sendJson(res, 400, { error: 'Missing practice parameter' });
     return;
   }
 
   try {
-    const verified = verifyPracticeFromDataset(practice);
+    await scHydrationPromise;
+    const verified = verifyPracticeFromDataset(practice, { practiceCode });
     const postcode = postcodeOverride || verified.postcode;
     if (!postcode) {
       throw new Error('Verified practice record did not include a postcode');
     }
     const geo = await geocodePostcode(postcode);
-    const nearestHub = nearestHubForCoords(geo.latitude, geo.longitude);
+    const nearestPcHub = nearestHubForCoords(pcHubRecords, geo.latitude, geo.longitude);
+    const nearestScHub = nearestHubForCoords(scHubRecords, geo.latitude, geo.longitude);
     sendJson(res, 200, {
       ok: true,
       inputPractice: practice,
@@ -529,25 +774,74 @@ async function handleResolvePractice(res, parsedUrl) {
         latitude: geo.latitude,
         longitude: geo.longitude,
       },
+      nearestPcHub: {
+        id: nearestPcHub.id,
+        hubName: nearestPcHub.hubName,
+        site: nearestPcHub.site,
+        url: nearestPcHub.url,
+        distanceKm: nearestPcHub.distanceKm,
+      },
+      nearestScHub: {
+        id: nearestScHub.id,
+        hubName: nearestScHub.hubName,
+        site: nearestScHub.site,
+        url: nearestScHub.url,
+        distanceKm: nearestScHub.distanceKm,
+      },
       nearestHub: {
-        id: nearestHub.id,
-        hubName: nearestHub.hubName,
-        site: nearestHub.site,
-        url: nearestHub.url,
-        distanceKm: nearestHub.distanceKm,
+        id: nearestPcHub.id,
+        hubName: nearestPcHub.hubName,
+        site: nearestPcHub.site,
+        url: nearestPcHub.url,
+        distanceKm: nearestPcHub.distanceKm,
       },
       dataset: buildDatasetStatusPayload().dataset,
       nhsSearchUrl: `https://www.nhs.uk/service-search/find-a-gp/?locationName=${encodeURIComponent(postcode)}&suppressInvalidLoc=False`,
     });
   } catch (error) {
+    if (error.code === 'AMBIGUOUS_PRACTICE_MATCH') {
+      sendJson(res, 409, {
+        ok: false,
+        needsSelection: true,
+        error: error.message,
+        candidates: error.candidates,
+      });
+      return;
+    }
     sendJson(res, 502, { ok: false, error: error.message });
   }
 }
 
 async function handleSeededPractices(res) {
   sendJson(res, 200, {
-    practices: practiceMap,
+    practices: practiceMap.map((entry) => entry.fullPracticeName),
     dataset: buildDatasetStatusPayload().dataset,
+  });
+}
+
+async function handleCentreRecords(res) {
+  await scHydrationPromise;
+  sendJson(res, 200, {
+    pcHubRecords: pcHubRecords.map((hub) => ({
+      id: hub.id,
+      hubName: hub.hubName,
+      site: hub.site,
+      address: hub.address || null,
+      postcode: hub.postcode || null,
+      url: hub.url || null,
+      lat: hub.lat,
+      lon: hub.lon,
+    })),
+    scHubRecords: scHubRecords.map((hub) => ({
+      id: hub.id,
+      hubName: hub.hubName,
+      site: hub.site,
+      address: hub.address || null,
+      postcode: hub.postcode || null,
+      url: hub.url || null,
+      lat: hub.lat,
+      lon: hub.lon,
+    })),
   });
 }
 
@@ -557,13 +851,17 @@ async function handleDatasetStatus(res) {
 
 async function handleRefreshPracticeData(res) {
   const payload = await refreshPracticeDataset({ reason: 'manual' });
-  sendJson(res, 200, {
+  sendJson(res, payload.refresh.lastResult === 'error' ? 502 : 200, {
     ok: payload.refresh.lastResult !== 'error',
     datasetStatus: payload,
   });
 }
 
 initializePracticeDataset();
+
+scHydrationPromise = hydrateHubCoordinates(scHubRecords, 'SC-CRDC').catch((error) => {
+  console.warn(`SC-CRDC coordinate hydration failed: ${error.message}`);
+});
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
@@ -575,6 +873,11 @@ const server = http.createServer(async (req, res) => {
 
   if (parsedUrl.pathname === '/api/seeded-practices') {
     await handleSeededPractices(res);
+    return;
+  }
+
+  if (parsedUrl.pathname === '/api/centre-records') {
+    await handleCentreRecords(res);
     return;
   }
 

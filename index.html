@@ -3,18 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Primary Care Research Map UK - GP Level</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <title>Primary Care Research Map - England - GP Level</title>
+    <link rel="stylesheet" href="./styles.css?v=2026-04-29e" />
   </head>
   <body>
     <div class="page-shell">
       <header class="page-header">
         <div>
-          <p class="eyebrow">Primary Care Research Map UK</p>
-          <h1>GP-Level Hub and Spoke Explorer</h1>
+          <p class="section-title">PRIMARY CARE COMMERCIAL RESEARCH EXPLORER - England (Dev) <span class="app-version">v.2.1</span></p>
           <p class="intro">
             Enter a GP practice name to verify it against the current NHS England Digital GP-practice mapping snapshot,
-            extract its postcode, and map it to the nearest regional research hub.
+            extract its postcode, and map it to the nearest Primary Care - Commercial Research Delivery Centre (PC-CRDC)
+            and Secondary Care - Commercial Research Delivery Centre (SC-CRDC).
           </p>
         </div>
       </header>
@@ -25,20 +25,25 @@
           <input id="practice-input" list="practice-options" placeholder="Type a GP practice name" autocomplete="off" />
           <datalist id="practice-options"></datalist>
           <p class="field-note">This is the main input. The app verifies the practice against the official NHS England Digital GP-practice mapping snapshot.</p>
+          <div id="practice-match-panel" class="match-panel" hidden>
+            <p id="practice-match-title" class="match-panel-title">Possible GP practice matches</p>
+            <p id="practice-match-message" class="match-panel-message">Choose the correct GP practice to continue.</p>
+            <div id="practice-match-options" class="match-options"></div>
+          </div>
         </label>
 
         <label class="field">
           <span>Optional postcode override</span>
           <input id="postcode-input" placeholder="Optional: enter a postcode" autocomplete="off" />
           <div class="field-actions">
-            <button id="resolve-button" type="button">Verify practice and map hub</button>
+            <button id="resolve-button" type="button">Verify practice and map centres</button>
             <a id="nhs-link" class="inline-link" href="https://www.nhs.uk/service-search/find-a-gp/" target="_blank">Open NHS Find a GP</a>
           </div>
           <p class="field-note">Leave blank to use the postcode extracted from the verified practice snapshot. Use this only if you want to override the location used for hub matching.</p>
         </label>
 
         <div class="status-card">
-          <p class="status-label">Mapped hub</p>
+          <p class="status-label">Mapped centres</p>
           <p id="status-hub" class="status-value">Waiting for verification</p>
           <p id="status-detail" class="status-detail">Enter a GP practice name and run the verification step.</p>
         </div>
@@ -67,12 +72,20 @@
               <dd id="summary-postcode">Not verified yet</dd>
             </div>
             <div>
-              <dt>Nearest hub</dt>
-              <dd id="summary-hub">Not verified yet</dd>
+              <dt>Nearest PC-CRDC</dt>
+              <dd id="summary-pc-hub">Not verified yet</dd>
             </div>
             <div>
-              <dt>Approximate distance</dt>
-              <dd id="summary-distance">Not verified yet</dd>
+              <dt>PC-CRDC distance</dt>
+              <dd id="summary-pc-distance">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Nearest SC-CRDC</dt>
+              <dd id="summary-sc-hub">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>SC-CRDC distance</dt>
+              <dd id="summary-sc-distance">Not verified yet</dd>
             </div>
             <div class="summary-span-2">
               <dt>Verification source</dt>
@@ -89,6 +102,7 @@
         <section class="diagram-panel">
           <svg id="diagram" viewBox="0 0 1600 1040" role="img" aria-label="GP-level hub and spoke diagram">
             <rect x="0" y="0" width="1600" height="1040" fill="#f4f1ea" />
+            <g id="diagram-underlay"></g>
             <g id="diagram-lines"></g>
             <g id="diagram-nodes"></g>
           </svg>
@@ -96,13 +110,15 @@
 
         <aside class="legend-panel">
           <div class="legend-header">
-            <p class="eyebrow">Regional hubs</p>
-            <h2>Numbered directory</h2>
+            <p class="section-title">CRDC - number directory</p>
             <p>
-              The verified local hub is highlighted in the diagram and in this list. Blue text indicates the associated linked practice site.
+              The verified nearest PC-CRDC and nearest SC-CRDC are highlighted in the diagram and in these lists. Blue text indicates linked practice or centre details.
             </p>
           </div>
-          <ol id="hub-legend" class="hub-legend"></ol>
+          <p class="legend-subhead">PC-CRDCs</p>
+          <ol id="pc-hub-legend" class="hub-legend"></ol>
+          <p class="legend-subhead">SC-CRDCs</p>
+          <ol id="sc-hub-legend" class="hub-legend"></ol>
         </aside>
       </main>
 
@@ -111,6 +127,6 @@
       </footer>
     </div>
 
-    <script type="module" src="./main.js"></script>
+    <script type="module" src="./main.js?v=2026-04-29e"></script>
   </body>
 </html>

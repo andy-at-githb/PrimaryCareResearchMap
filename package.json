@@ -2,11 +2,13 @@
   "name": "gp-level-hub-spoke-app",
   "version": "1.0.0",
   "private": true,
-  "description": "Primary Care Research Map UK GP-level hub-and-spoke app",
+  "description": "Primary Care Research Map - England GP-level hub-and-spoke app",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "HOST=127.0.0.1 PORT=8000 node server.js"
+    "dev": "HOST=127.0.0.1 PORT=8000 node server.js",
+    "sync:render": "./sync-render-upload.sh",
+    "smoke:test": "node smoke-test.js"
   },
   "engines": {
     "node": ">=18"

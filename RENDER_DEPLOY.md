@@ -65,6 +65,14 @@ The deployment configs set:
 
 That matches Render's requirement for public web services.
 
+## Important host check
+
+Even though the app now includes a Render-aware fallback in code, the safest setup is still to check the Render `Environment` page after deployment and confirm:
+
+- `HOST=0.0.0.0`
+
+This avoids the old issue where the service could bind to `127.0.0.1` instead of a public interface.
+
 ## Notes
 
 - The app depends on outbound access to NHS England Digital and Postcodes.io.
