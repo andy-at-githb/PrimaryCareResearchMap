@@ -1,0 +1,24 @@
+{
+  "name": "Primary Care Commercial Research Explorer - England",
+  "short_name": "PC Research",
+  "description": "Verify a GP practice against the current NHS England Digital GP-practice mapping snapshot and map it to the nearest PC-CRDC, SC-CRDC, university department, PC-CTU, and SC-CTU.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f1ea",
+  "theme_color": "#f4f1ea",
+  "icons": [
+    {
+      "src": "/assets/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const NHS_GP_SEARCH = 'https://www.nhs.uk/service-search/find-a-gp/';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const APP_ASSET_VERSION = '2026-04-30x';
+const APP_ASSET_VERSION = '2026-04-30y';
 const CLEAN_MAP_ASSET_URL = `./assets/UK_CRDC_Map_clean.png?v=${APP_ASSET_VERSION}`;
 const MAP_RECT = { x: 875, y: 76, w: 635, h: 910 };
 const MAP_UNDERLAY_SHIFT_X = 26;

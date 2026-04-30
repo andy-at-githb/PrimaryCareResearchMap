@@ -34,6 +34,11 @@ This is a lightweight local web app for the GP-level research map.
 - `server.js`: local backend for official-practice verification, dataset refresh, postcode lookup, and nearest-hub matching
 - `assets/UK_CRDC_Map.webp`: original UK map reference image
 - `assets/UK_CRDC_Map_clean.png`: cleaned shared UK map underlay used by all browsers
+- `assets/app-icon.svg`: vector app icon used for browser and install metadata
+- `assets/app-icon-180.png`: iPhone home-screen icon
+- `assets/app-icon-192.png`: Android home-screen icon
+- `assets/app-icon-512.png`: large Android/web app icon
+- `site.webmanifest`: web app manifest for Android install/home-screen behavior
 - `data/gp-reg-pat-prac-map_2026-02.csv`: older official GP-practice mapping snapshot retained locally
 - `data/gp-reg-pat-prac-map_2026-04.csv`: latest downloaded official GP-practice mapping snapshot currently active
 - `data/academic-primary-care-institutions.json`: academic primary care institution dataset used for the `Universities` map layer
@@ -105,6 +110,15 @@ Current behavior:
 - `SC-CRDC` positions use the postcode-hydrated coordinates from the backend
 - both sets are projected into the map rectangle in the SVG
 - nearby centres are slightly spread so they remain visible in dense areas such as London and the South East
+
+### 4c. Home-screen app icon support
+
+The app now includes install/home-screen metadata for mobile browsers:
+- `site.webmanifest` for Android and other manifest-aware browsers
+- `apple-touch-icon` metadata for iPhone home-screen saves
+- a dedicated app icon set in `assets/`
+
+This means the hosted app can show a proper icon when saved to the home screen on iPhone or Android instead of using a generic screenshot tile.
 
 ### 4c. University-linked institution placement
 

@@ -255,6 +255,7 @@ const MIME = {
   '.css': 'text/css; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.webp': 'image/webp',
   '.png': 'image/png',
@@ -298,6 +299,7 @@ function sendFile(res, filePath) {
 const PUBLIC_FILE_PATHS = new Map([
   ['/', path.join(ROOT, 'index.html')],
   ['/index.html', path.join(ROOT, 'index.html')],
+  ['/site.webmanifest', path.join(ROOT, 'site.webmanifest')],
   ['/styles.css', path.join(ROOT, 'styles.css')],
   ['/main.js', path.join(ROOT, 'main.js')],
 ]);
