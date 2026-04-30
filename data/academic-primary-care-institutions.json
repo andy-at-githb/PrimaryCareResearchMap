@@ -1,0 +1,552 @@
+[
+  {
+    "id": 1,
+    "institutionCode": "U1",
+    "locationLabel": "Aberdeen",
+    "site": "Aberdeen - Academic Primary Care",
+    "url": "https://www.abdn.ac.uk/iahs/research/primary-care/",
+    "sourceBasis": "SAPC directory entry \"Aberdeen - Academic Primary Care\".",
+    "lat": 57.1497,
+    "lon": -2.0943
+  },
+  {
+    "id": 2,
+    "institutionCode": "U2",
+    "locationLabel": "Bangor",
+    "site": "Bangor - North Wales Centre for Primary Care Research",
+    "url": "https://sapc.ac.uk/institutions",
+    "sourceBasis": "SAPC directory entry \"Bangor - North Wales Centre for Primary Care Research\". Use SAPC directory as source where current standalone Bangor page is not obvious.",
+    "lat": 53.2273,
+    "lon": -4.1297
+  },
+  {
+    "id": 3,
+    "institutionCode": "U3",
+    "locationLabel": "Belfast",
+    "site": "Belfast - Queen's Belfast Department of General Practice and Primary Care",
+    "url": "https://www.qub.ac.uk/schools/mdbs/Research/Research-themes/PublicHealth/GeneralPracticePrimaryCare/",
+    "sourceBasis": "SAPC directory entry \"Belfast - Queen's Belfast Department of General Practice and Primary Care\".",
+    "lat": 54.5973,
+    "lon": -5.9301
+  },
+  {
+    "id": 4,
+    "institutionCode": "U4",
+    "locationLabel": "Birmingham",
+    "site": "Birmingham - Institute of Applied Health Research",
+    "url": "https://www.birmingham.ac.uk/research/applied-health",
+    "sourceBasis": "SAPC directory entry \"Birmingham - Institute of Applied Health Research\".",
+    "lat": 52.4862,
+    "lon": -1.8904
+  },
+  {
+    "id": 5,
+    "institutionCode": "U5",
+    "locationLabel": "Brighton and Sussex",
+    "site": "Brighton and Sussex - Primary Care and Health Services",
+    "url": "https://www.bsms.ac.uk/research/primary-care-and-public-health/index.aspx",
+    "sourceBasis": "SAPC directory entry \"Brighton and Sussex - Primary Care and Health Services\".",
+    "lat": 50.8676,
+    "lon": -0.0872
+  },
+  {
+    "id": 6,
+    "institutionCode": "U6",
+    "locationLabel": "Bristol",
+    "site": "Bristol - Centre for Academic Primary Care",
+    "url": "https://www.bristol.ac.uk/primaryhealthcare/",
+    "sourceBasis": "SAPC directory entry \"Bristol - Centre for Academic Primary Care\".",
+    "lat": 51.4545,
+    "lon": -2.5879
+  },
+  {
+    "id": 7,
+    "institutionCode": "U7",
+    "locationLabel": "Buckingham",
+    "site": "Buckingham - University of Buckingham Medical School",
+    "url": "https://www.buckingham.ac.uk/school/medicine/",
+    "sourceBasis": "SAPC directory entry \"Buckingham - University of Buckingham Medical School\".",
+    "lat": 51.995,
+    "lon": -0.9879
+  },
+  {
+    "id": 8,
+    "institutionCode": "U8",
+    "locationLabel": "Cambridge",
+    "site": "Cambridge - Primary Care Unit",
+    "url": "https://www.phpc.cam.ac.uk/research/departmental-research-units/primary-care-unit",
+    "sourceBasis": "SAPC directory entry \"Cambridge - Primary Care Unit\".",
+    "lat": 52.2053,
+    "lon": 0.1218
+  },
+  {
+    "id": 9,
+    "institutionCode": "U9",
+    "locationLabel": "Cardiff",
+    "site": "Cardiff - Population Medicine",
+    "url": "https://www.cardiff.ac.uk/medicine/research/themes/population-medicine",
+    "sourceBasis": "SAPC directory entry \"Cardiff - Population Medicine\".",
+    "lat": 51.4816,
+    "lon": -3.1791
+  },
+  {
+    "id": 10,
+    "institutionCode": "U10",
+    "locationLabel": "Dundee",
+    "site": "Dundee - Division of Population Health Sciences",
+    "url": "https://www.dundee.ac.uk/medicine/research/population-health-genomics",
+    "sourceBasis": "SAPC directory entry \"Dundee - Division of Population Health Sciences\".",
+    "lat": 56.462,
+    "lon": -2.9707
+  },
+  {
+    "id": 11,
+    "institutionCode": "U11",
+    "locationLabel": "Durham",
+    "site": "Durham - Centre for Integrated Health Care Research",
+    "url": "https://sapc.ac.uk/institutions",
+    "sourceBasis": "SAPC directory entry \"Durham - Centre for Integrated Health Care Research\". Use SAPC directory as source where current standalone Durham page is not obvious.",
+    "lat": 54.7753,
+    "lon": -1.5849
+  },
+  {
+    "id": 12,
+    "institutionCode": "U12",
+    "locationLabel": "East Anglia",
+    "site": "East Anglia - University of East Anglia Department of Primary Care",
+    "url": "https://www.uea.ac.uk/about/norwich-medical-school/research/primary-care",
+    "sourceBasis": "SAPC directory entry \"East Anglia - University of East Anglia - Department of Primary Care\".",
+    "lat": 52.6309,
+    "lon": 1.2974
+  },
+  {
+    "id": 13,
+    "institutionCode": "U13",
+    "locationLabel": "Edinburgh",
+    "site": "Edinburgh - Centre for Population Health Sciences",
+    "url": "https://www.ed.ac.uk/usher",
+    "sourceBasis": "SAPC directory entry \"Edinburgh - Centre for Population Health Sciences\"; current University of Edinburgh structure is through the Usher Institute.",
+    "lat": 55.9533,
+    "lon": -3.1883
+  },
+  {
+    "id": 14,
+    "institutionCode": "U14",
+    "locationLabel": "Exeter",
+    "site": "Exeter - Department of Primary Care / APEX",
+    "url": "https://medicine.exeter.ac.uk/research/apex/",
+    "sourceBasis": "SAPC directory entry \"Exeter - Department of Primary Care\"; current public identity is APEX, the University of Exeter Collaboration for Academic Primary Care.",
+    "lat": 50.7184,
+    "lon": -3.5339
+  },
+  {
+    "id": 15,
+    "institutionCode": "U15",
+    "locationLabel": "Glasgow",
+    "site": "Glasgow - General Practice and Primary Care",
+    "url": "https://www.gla.ac.uk/schools/healthwellbeing/research/generalpracticeprimarycare/",
+    "sourceBasis": "SAPC directory entry \"Glasgow - General Practice and Primary Care\".",
+    "lat": 55.8642,
+    "lon": -4.2518
+  },
+  {
+    "id": 16,
+    "institutionCode": "U16",
+    "locationLabel": "Hertfordshire",
+    "site": "Hertfordshire - Centre for Research in Public Health and Community Care",
+    "url": "https://www.herts.ac.uk/research/centres-and-groups/cripacc",
+    "sourceBasis": "SAPC directory entry \"Hertfordshire - University of Hertfordshire - Centre for Research in Primary and Community Care\"; current public name appears as Centre for Research in Public Health and Community Care (CRIPACC).",
+    "lat": 51.7634,
+    "lon": -0.2389
+  },
+  {
+    "id": 17,
+    "institutionCode": "U17",
+    "locationLabel": "Hull York Medical School",
+    "site": "Hull York Medical School",
+    "url": "https://www.hyms.ac.uk/",
+    "sourceBasis": "SAPC directory entry \"Hull York Medical School\".",
+    "lat": 53.959,
+    "lon": -1.0815
+  },
+  {
+    "id": 18,
+    "institutionCode": "U18",
+    "locationLabel": "Imperial",
+    "site": "Imperial - Institute of Global Health Innovation",
+    "url": "https://www.imperial.ac.uk/global-health-innovation/",
+    "sourceBasis": "SAPC directory entry \"Imperial - Institute of Global Health Innovation\".",
+    "lat": 51.4988,
+    "lon": -0.1749
+  },
+  {
+    "id": 19,
+    "institutionCode": "U19",
+    "locationLabel": "Keele",
+    "site": "Keele - School of Medicine Primary Care and Health Sciences / Keele primary care research",
+    "url": "https://www.keele.ac.uk/medicine/research/primarycare/",
+    "sourceBasis": "SAPC directory entry \"Keele - Keele University Institute for Primary Care and Health Sciences\".",
+    "lat": 53.0036,
+    "lon": -2.272
+  },
+  {
+    "id": 20,
+    "institutionCode": "U20",
+    "locationLabel": "Kent",
+    "site": "Kent - Centre for Health Services Studies",
+    "url": "https://research.kent.ac.uk/chss/",
+    "sourceBasis": "SAPC directory entry \"Kent - Centre for Health Service Studies\".",
+    "lat": 51.2802,
+    "lon": 1.0789
+  },
+  {
+    "id": 21,
+    "institutionCode": "U21",
+    "locationLabel": "Lancashire",
+    "site": "Lancashire - University of Central Lancashire",
+    "url": "https://www.uclan.ac.uk/schools/school-of-medicine-and-dentistry",
+    "sourceBasis": "SAPC directory entry \"Lancashire - University of Central Lancashire\".",
+    "lat": 53.7632,
+    "lon": -2.7031
+  },
+  {
+    "id": 22,
+    "institutionCode": "U22",
+    "locationLabel": "Leeds",
+    "site": "Leeds - Academic Unit of Primary Care",
+    "url": "https://medicinehealth.leeds.ac.uk/medicine-undergraduate/doc/academic-unit-primary-care",
+    "sourceBasis": "SAPC directory entry \"Leeds - Academic Unit of Primary Care\".",
+    "lat": 53.8008,
+    "lon": -1.5491
+  },
+  {
+    "id": 23,
+    "institutionCode": "U23",
+    "locationLabel": "Leeds",
+    "site": "Leeds - Leeds Beckett University",
+    "url": "https://www.leedsbeckett.ac.uk/",
+    "sourceBasis": "SAPC directory entry \"Leeds - Leeds Beckett University\". Department-specific academic primary care page not clearly identified.",
+    "lat": 53.8008,
+    "lon": -1.5491
+  },
+  {
+    "id": 24,
+    "institutionCode": "U24",
+    "locationLabel": "Leicester",
+    "site": "Leicester - Department of Medical Education",
+    "url": "https://le.ac.uk/medicine/study/undergraduate/clinical-education",
+    "sourceBasis": "SAPC directory entry \"Leicester - Department of Medical Education\".",
+    "lat": 52.6369,
+    "lon": -1.1398
+  },
+  {
+    "id": 25,
+    "institutionCode": "U25",
+    "locationLabel": "Leicester",
+    "site": "Leicester - Division of Primary Care",
+    "url": "https://le.ac.uk/health-sciences/research/primary-care",
+    "sourceBasis": "SAPC directory entry \"Leicester - Division of Primary Care\".",
+    "lat": 52.6369,
+    "lon": -1.1398
+  },
+  {
+    "id": 26,
+    "institutionCode": "U26",
+    "locationLabel": "Lincoln",
+    "site": "Lincoln - Community and Health Research Unit",
+    "url": "https://www.lincoln.ac.uk/researchatlincoln/healthandwellbeing/communityandhealthresearchunit/",
+    "sourceBasis": "SAPC directory entry \"Lincoln - Community and Health Research Unit\".",
+    "lat": 53.2307,
+    "lon": -0.5406
+  },
+  {
+    "id": 27,
+    "institutionCode": "U27",
+    "locationLabel": "Liverpool",
+    "site": "Liverpool - Academic Primary Care",
+    "url": "https://www.liverpool.ac.uk/primary-care/",
+    "sourceBasis": "SAPC directory entry \"Liverpool - Academic Primary Care\".",
+    "lat": 53.4084,
+    "lon": -2.9916
+  },
+  {
+    "id": 28,
+    "institutionCode": "U28",
+    "locationLabel": "London",
+    "site": "London - City University / City St George's",
+    "url": "https://www.citystgeorges.ac.uk/",
+    "sourceBasis": "SAPC directory entry \"London - City University\". Note: City and St George's have since combined as City St George's, University of London.",
+    "lat": 51.5074,
+    "lon": -0.1278
+  },
+  {
+    "id": 29,
+    "institutionCode": "U29",
+    "locationLabel": "London",
+    "site": "London - Imperial College London School of Public Health",
+    "url": "https://www.imperial.ac.uk/school-public-health/",
+    "sourceBasis": "SAPC directory entry \"London - Imperial College London School of Public Health\".",
+    "lat": 51.5074,
+    "lon": -0.1278
+  },
+  {
+    "id": 30,
+    "institutionCode": "U30",
+    "locationLabel": "London",
+    "site": "London - King's College London, School of Population Health and Environmental Sciences",
+    "url": "https://www.kcl.ac.uk/slcps",
+    "sourceBasis": "SAPC directory entry \"London - King's College London, School of Population Health and Environmental Sciences\"; current structure is King's School of Life Course and Population Sciences.",
+    "lat": 51.5074,
+    "lon": -0.1278
+  },
+  {
+    "id": 31,
+    "institutionCode": "U31",
+    "locationLabel": "London",
+    "site": "London - Queen Mary University of London, Centre for Primary Care",
+    "url": "https://www.qmul.ac.uk/blizard/research/centres/centre-for-primary-care/",
+    "sourceBasis": "SAPC directory entry \"London - Queen Mary University of London\".",
+    "lat": 51.5074,
+    "lon": -0.1278
+  },
+  {
+    "id": 32,
+    "institutionCode": "U32",
+    "locationLabel": "London",
+    "site": "London - UCL Research Department of Primary Care and Population Health",
+    "url": "https://www.ucl.ac.uk/epidemiology-health-care/research/primary-care-and-population-health",
+    "sourceBasis": "SAPC directory entry \"London - Royal Free Hospital & University College London The Research Department of Primary Care and Population Health\".",
+    "lat": 51.5074,
+    "lon": -0.1278
+  },
+  {
+    "id": 33,
+    "institutionCode": "U33",
+    "locationLabel": "London",
+    "site": "London - South Bank University",
+    "url": "https://www.lsbu.ac.uk/study/study-at-lsbu/our-schools/institute-of-health-social-care",
+    "sourceBasis": "SAPC directory entry \"London - South Bank University\". Department-specific academic primary care page not clearly identified.",
+    "lat": 51.5074,
+    "lon": -0.1278
+  },
+  {
+    "id": 34,
+    "institutionCode": "U34",
+    "locationLabel": "London",
+    "site": "London - St George's University of London",
+    "url": "https://www.sgul.ac.uk/about/our-institutes/population-health",
+    "sourceBasis": "SAPC directory entry \"London - St George's University Of London\".",
+    "lat": 51.5074,
+    "lon": -0.1278
+  },
+  {
+    "id": 35,
+    "institutionCode": "U35",
+    "locationLabel": "Manchester",
+    "site": "Manchester - Centre for Primary Care and Health Services Research",
+    "url": "https://www.manchester.ac.uk/research/centres/centre-for-primary-care-and-health-services-research/",
+    "sourceBasis": "SAPC directory entry \"Manchester - Centre for Primary Care\".",
+    "lat": 53.4808,
+    "lon": -2.2426
+  },
+  {
+    "id": 36,
+    "institutionCode": "U36",
+    "locationLabel": "Newcastle",
+    "site": "Newcastle - Institute of Health and Society / Population Health Sciences Institute",
+    "url": "https://www.ncl.ac.uk/medical-sciences/research/institutes/population-health-sciences/",
+    "sourceBasis": "SAPC directory entry \"Newcastle - Institute of Health & Society\"; current public structure is Population Health Sciences Institute.",
+    "lat": 54.9783,
+    "lon": -1.6178
+  },
+  {
+    "id": 37,
+    "institutionCode": "U37",
+    "locationLabel": "Nottingham",
+    "site": "Nottingham - Centre for Academic Primary Care / Division of Primary Care",
+    "url": "https://www.nottingham.ac.uk/research/groups/primarycare/",
+    "sourceBasis": "SAPC directory entry and SAPC profile references to \"Nottingham - Division of Primary Care\".",
+    "lat": 52.9548,
+    "lon": -1.1581
+  },
+  {
+    "id": 38,
+    "institutionCode": "U38",
+    "locationLabel": "Oxford",
+    "site": "Oxford - Nuffield Department of Primary Care Health Sciences",
+    "url": "https://www.phc.ox.ac.uk/",
+    "sourceBasis": "SAPC directory entry \"Oxford - Nuffield Department of Primary Care Health Sciences\".",
+    "lat": 51.752,
+    "lon": -1.2577
+  },
+  {
+    "id": 39,
+    "institutionCode": "U39",
+    "locationLabel": "Plymouth",
+    "site": "Plymouth - Community and Primary Care Research Group",
+    "url": "https://www.plymouth.ac.uk/research/primarycare",
+    "sourceBasis": "SAPC regional / job references to University of Plymouth Community and Primary Care Research Group.",
+    "lat": 50.3755,
+    "lon": -4.1427
+  },
+  {
+    "id": 40,
+    "institutionCode": "U40",
+    "locationLabel": "Sheffield",
+    "site": "Sheffield - Academic Unit of Primary Medical Care",
+    "url": "https://www.sheffield.ac.uk/smph/research/groups/primary-medical-care",
+    "sourceBasis": "SAPC directory entry \"Sheffield - Academic Unit of Primary Medical Care\".",
+    "lat": 53.3811,
+    "lon": -1.4701
+  },
+  {
+    "id": 41,
+    "institutionCode": "U41",
+    "locationLabel": "Southampton",
+    "site": "Southampton - Primary Care Research Centre, School of Primary Care, Population Sciences and Medical Education",
+    "url": "https://www.southampton.ac.uk/primarycare/",
+    "sourceBasis": "SAPC directory entry \"Southampton - Primary Care Research Centre, School of Primary Care, Population Sciences and Medical Education\".",
+    "lat": 50.9097,
+    "lon": -1.4044
+  },
+  {
+    "id": 42,
+    "institutionCode": "U42",
+    "locationLabel": "St Andrews",
+    "site": "St Andrews - School of Medicine primary care / population and behavioural science",
+    "url": "https://www.st-andrews.ac.uk/medicine/research/population-behavioural-science/",
+    "sourceBasis": "SAPC ambassador and regional references to St Andrews as a UK academic primary care department/group.",
+    "lat": 56.3398,
+    "lon": -2.7967
+  },
+  {
+    "id": 43,
+    "institutionCode": "U43",
+    "locationLabel": "Sunderland",
+    "site": "Sunderland - School of Medicine",
+    "url": "https://www.sunderland.ac.uk/study/medicine/",
+    "sourceBasis": "SAPC regional references to Sunderland among Northern academic primary care departments.",
+    "lat": 54.9069,
+    "lon": -1.3838
+  },
+  {
+    "id": 44,
+    "institutionCode": "U44",
+    "locationLabel": "Surrey",
+    "site": "Surrey - Faculty of Health and Medical Sciences",
+    "url": "https://www.surrey.ac.uk/faculty-health-medical-sciences",
+    "sourceBasis": "SAPC directory entry \"Surrey - Faculty of Health & Medical Sciences\".",
+    "lat": 51.2362,
+    "lon": -0.5704
+  },
+  {
+    "id": 45,
+    "institutionCode": "U45",
+    "locationLabel": "Swansea",
+    "site": "Swansea - Swansea University Medical School",
+    "url": "https://www.swansea.ac.uk/medicine-health-life-science/",
+    "sourceBasis": "SAPC directory entry \"Swansea University Medical School\".",
+    "lat": 51.6214,
+    "lon": -3.9436
+  },
+  {
+    "id": 46,
+    "institutionCode": "U46",
+    "locationLabel": "Ulster",
+    "site": "Ulster - Institute of Nursing and Health Research",
+    "url": "https://www.ulster.ac.uk/research/topic/nursing-and-health",
+    "sourceBasis": "SAPC directory entry \"Ulster - University of Ulster - Institute of Nursing and Health Research\".",
+    "lat": 55.1317,
+    "lon": -6.666
+  },
+  {
+    "id": 47,
+    "institutionCode": "U47",
+    "locationLabel": "Warwick Clinical Trials Unit",
+    "site": "Warwick Clinical Trials Unit",
+    "url": "https://warwick.ac.uk/fac/sci/med/research/ctu/",
+    "sourceBasis": "SAPC directory entry \"Warwick Clinical Trials Unit\".",
+    "lat": 52.3811,
+    "lon": -1.5603
+  },
+  {
+    "id": 48,
+    "institutionCode": "U48",
+    "locationLabel": "Warwick",
+    "site": "Warwick - Warwick Primary Care, Warwick Medical School",
+    "url": "https://warwick.ac.uk/fac/sci/med/research/hscience/primarycare/",
+    "sourceBasis": "SAPC directory entry \"Warwick Medical School\"; SAPC page says Warwick Primary Care is the focal point for primary care research, teaching and development at Warwick Medical School.",
+    "lat": 52.3811,
+    "lon": -1.5603
+  },
+  {
+    "id": 49,
+    "institutionCode": "U49",
+    "locationLabel": "York",
+    "site": "York - Department of Health Sciences primary care research",
+    "url": "https://www.york.ac.uk/healthsciences/research/primary-care/",
+    "sourceBasis": "SAPC directory page 3 / regional references to York as a UK academic primary care department/group.",
+    "lat": 53.959,
+    "lon": -1.0815
+  },
+  {
+    "id": 50,
+    "institutionCode": "U50",
+    "locationLabel": "Anglia Ruskin University",
+    "site": "Anglia Ruskin University - School of Medicine / primary care academic activity",
+    "url": "https://www.aru.ac.uk/study/undergraduate/medicine",
+    "sourceBasis": "SAPC regional list for South East departments and 2025 SAPC AGM report noting Professor Sanjiv Ahluwalia as professor of primary care at Anglia Ruskin.",
+    "lat": 51.7356,
+    "lon": 0.4685
+  },
+  {
+    "id": 51,
+    "institutionCode": "U51",
+    "locationLabel": "Aston University",
+    "site": "Aston University - primary care / applied health research activity",
+    "url": "https://www.aston.ac.uk/hls",
+    "sourceBasis": "SAPC regional list for Trent departments and SAPC 2025 AGM report noting Professor Ian Maidment, Aston, among NIHR Senior Investigators in the academic primary care community.",
+    "lat": 52.4862,
+    "lon": -1.8904
+  },
+  {
+    "id": 52,
+    "institutionCode": "U52",
+    "locationLabel": "Brunel University London",
+    "site": "Brunel University London - Brunel Medical School",
+    "url": "https://www.brunel.ac.uk/medicine",
+    "sourceBasis": "SAPC regional list for South East departments.",
+    "lat": 51.5326,
+    "lon": -0.4721
+  },
+  {
+    "id": 53,
+    "institutionCode": "U53",
+    "locationLabel": "Edge Hill University",
+    "site": "Edge Hill University - Medical School",
+    "url": "https://www.edgehill.ac.uk/departments/academic/medical-school/",
+    "sourceBasis": "SAPC regional list for Northern departments.",
+    "lat": 53.5593,
+    "lon": -2.873
+  },
+  {
+    "id": 54,
+    "institutionCode": "U54",
+    "locationLabel": "Lancaster University",
+    "site": "Lancaster University - Lancaster Medical School",
+    "url": "https://www.lancaster.ac.uk/lms/",
+    "sourceBasis": "SAPC regional list for Northern departments.",
+    "lat": 54.0101,
+    "lon": -2.7876
+  },
+  {
+    "id": 55,
+    "institutionCode": "U55",
+    "locationLabel": "Worcester",
+    "site": "Worcester - Three Counties Medical School",
+    "url": "https://www.worcester.ac.uk/about/academic-schools/three-counties-medical-school/",
+    "sourceBasis": "SAPC regional list for South West departments and SAPC ambassador references to Worcester.",
+    "lat": 52.192,
+    "lon": -2.22
+  }
+]

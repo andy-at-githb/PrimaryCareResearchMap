@@ -24,6 +24,8 @@ const DATASET_PREFIX = 'gp-reg-pat-prac-map_';
 const DATASET_PATTERN = /^gp-reg-pat-prac-map_(\d{4})-(\d{2})\.csv$/;
 const REFRESH_INTERVAL_HOURS = 12;
 const REFRESH_INTERVAL_MS = REFRESH_INTERVAL_HOURS * 60 * 60 * 1000;
+const ACADEMIC_INSTITUTIONS_FILE = path.join(DATA_DIR, 'academic-primary-care-institutions.json');
+const SECONDARY_CTU_FILE = path.join(DATA_DIR, 'secondary-care-ctus.json');
 
 const MONTH_NAMES = [
   'January',
@@ -214,9 +216,26 @@ const scHubRecords = [
   },
 ];
 
+const primaryCareCtuRecords = [
+  {
+    id: 1,
+    ctuCode: 'C1',
+    site: 'Oxford University PC-CTU',
+    locationLabel: 'Oxford',
+    postcode: 'OX3 7LF',
+    url: 'https://www.phctrials.ox.ac.uk/',
+    lat: 51.7520,
+    lon: -1.2577,
+  },
+];
+
+const academicInstitutionRecords = JSON.parse(fs.readFileSync(ACADEMIC_INSTITUTIONS_FILE, 'utf8'));
+const secondaryCareCtuRecords = JSON.parse(fs.readFileSync(SECONDARY_CTU_FILE, 'utf8'));
+
 let practiceMap = [];
+let practiceSuggestions = [];
 let datasetRefreshPromise = null;
-let scHydrationPromise = null;
+let supportDatasetHydrationPromise = null;
 
 const datasetState = {
   current: null,
@@ -276,10 +295,35 @@ function sendFile(res, filePath) {
   });
 }
 
-function sanitizePath(urlPath) {
-  const normalized = path.normalize(urlPath).replace(/^([.][.][/\\])+/, '');
-  const target = normalized === '/' ? '/index.html' : normalized;
-  return path.join(ROOT, target);
+const PUBLIC_FILE_PATHS = new Map([
+  ['/', path.join(ROOT, 'index.html')],
+  ['/index.html', path.join(ROOT, 'index.html')],
+  ['/styles.css', path.join(ROOT, 'styles.css')],
+  ['/main.js', path.join(ROOT, 'main.js')],
+]);
+
+const PUBLIC_DIRECTORY_PREFIXES = [
+  ['/assets/', path.join(ROOT, 'assets')],
+];
+
+function resolvePublicFilePath(urlPath) {
+  if (PUBLIC_FILE_PATHS.has(urlPath)) {
+    return PUBLIC_FILE_PATHS.get(urlPath);
+  }
+
+  for (const [urlPrefix, directory] of PUBLIC_DIRECTORY_PREFIXES) {
+    if (!urlPath.startsWith(urlPrefix)) continue;
+
+    const relativePath = path.normalize(urlPath.slice(urlPrefix.length)).replace(/^([.][.][/\\])+/, '');
+    const filePath = path.join(directory, relativePath);
+    const relativeToDirectory = path.relative(directory, filePath);
+    if (relativeToDirectory.startsWith('..') || path.isAbsolute(relativeToDirectory)) {
+      return null;
+    }
+    return filePath;
+  }
+
+  return null;
 }
 
 function decodeHtml(str) {
@@ -373,17 +417,21 @@ function setCurrentDataset(filePath, metadata = {}) {
   const idxName = header.indexOf('PRACTICE_NAME');
   const idxPostcode = header.indexOf('PRACTICE_POSTCODE');
   const idxCode = header.indexOf('PRACTICE_CODE');
+  if (idxName < 0 || idxPostcode < 0 || idxCode < 0) {
+    throw new Error('GP-practice snapshot is missing one or more required columns: PRACTICE_NAME, PRACTICE_POSTCODE, PRACTICE_CODE');
+  }
 
   practiceMap = lines.slice(1).map((line) => {
     const cols = parseCsvLine(line);
     return {
-      practiceCode: cols[idxCode],
-      practiceName: cols[idxName],
-      fullPracticeName: cols[idxName],
-      postcode: cols[idxPostcode],
+      practiceCode: (cols[idxCode] || '').trim(),
+      practiceName: (cols[idxName] || '').trim(),
+      postcode: (cols[idxPostcode] || '').trim(),
       normalizedPracticeName: normalizeName(cols[idxName] || ''),
     };
-  }).filter((entry) => entry.practiceName && entry.postcode);
+  }).filter((entry) => entry.practiceCode && entry.practiceName && entry.postcode);
+
+  practiceSuggestions = [...new Set(practiceMap.map((entry) => entry.practiceName))].sort((a, b) => a.localeCompare(b, 'en-GB'));
 
   const fileName = path.basename(filePath);
   const match = fileName.match(DATASET_PATTERN);
@@ -476,9 +524,7 @@ function verifyPracticeFromDataset(practiceName, { practiceCode = '' } = {}) {
       throw new Error('Selected GP practice code was not found in the current dataset');
     }
     return {
-      verified: true,
       title: exactPractice.practiceName,
-      address: exactPractice.practiceName,
       postcode: exactPractice.postcode,
       sourceUrl: datasetState.current?.publicationUrl || PRACTICE_SERIES_URL,
       source: 'nhs-england-digital-gp-snapshot',
@@ -504,9 +550,7 @@ function verifyPracticeFromDataset(practiceName, { practiceCode = '' } = {}) {
   }
 
   return {
-    verified: true,
     title: best.practiceName,
-    address: best.practiceName,
     postcode: best.postcode,
     sourceUrl: datasetState.current?.publicationUrl || PRACTICE_SERIES_URL,
     source: 'nhs-england-digital-gp-snapshot',
@@ -542,18 +586,26 @@ async function geocodePostcode(postcode) {
   return payload.result;
 }
 
-async function hydrateHubCoordinates(records, label) {
-  await Promise.all(records.map(async (hub) => {
-    if (!hub.postcode) return;
+async function hydrateRecordsByPostcode(records, label, recordLabelSelector) {
+  await Promise.all(records.map(async (record) => {
+    if (!record.postcode) return;
     try {
-      const geo = await geocodePostcode(hub.postcode);
-      hub.lat = geo.latitude;
-      hub.lon = geo.longitude;
-      hub.postcode = geo.postcode;
+      const geo = await geocodePostcode(record.postcode);
+      record.lat = geo.latitude;
+      record.lon = geo.longitude;
+      record.postcode = geo.postcode;
     } catch (error) {
-      console.warn(`${label} coordinate lookup failed for ${hub.hubName}: ${error.message}`);
+      console.warn(`${label} coordinate lookup failed for ${recordLabelSelector(record)}: ${error.message}`);
     }
   }));
+}
+
+async function hydrateSupportDatasets() {
+  await Promise.all([
+    hydrateRecordsByPostcode(scHubRecords, 'SC-CRDC', (record) => record.hubName || record.site || 'unknown SC-CRDC'),
+    hydrateRecordsByPostcode(primaryCareCtuRecords, 'Primary Care - CTU', (record) => record.ctuCode || record.site || 'unknown CTU'),
+    hydrateRecordsByPostcode(secondaryCareCtuRecords, 'Secondary Care - CTU', (record) => record.ctuCode || record.site || 'unknown CTU'),
+  ]);
 }
 
 async function fetchText(url) {
@@ -749,7 +801,7 @@ async function handleResolvePractice(res, parsedUrl) {
   }
 
   try {
-    await scHydrationPromise;
+    await supportDatasetHydrationPromise;
     const verified = verifyPracticeFromDataset(practice, { practiceCode });
     const postcode = postcodeOverride || verified.postcode;
     if (!postcode) {
@@ -758,12 +810,14 @@ async function handleResolvePractice(res, parsedUrl) {
     const geo = await geocodePostcode(postcode);
     const nearestPcHub = nearestHubForCoords(pcHubRecords, geo.latitude, geo.longitude);
     const nearestScHub = nearestHubForCoords(scHubRecords, geo.latitude, geo.longitude);
+    const nearestAcademicInstitution = nearestHubForCoords(academicInstitutionRecords, geo.latitude, geo.longitude);
+    const nearestPrimaryCareCtu = nearestHubForCoords(primaryCareCtuRecords, geo.latitude, geo.longitude);
+    const nearestSecondaryCareCtu = nearestHubForCoords(secondaryCareCtuRecords, geo.latitude, geo.longitude);
     sendJson(res, 200, {
       ok: true,
       inputPractice: practice,
       verifiedPractice: {
         name: verified.title,
-        address: verified.address,
         postcode,
         sourceUrl: verified.sourceUrl,
         source: verified.source,
@@ -788,12 +842,29 @@ async function handleResolvePractice(res, parsedUrl) {
         url: nearestScHub.url,
         distanceKm: nearestScHub.distanceKm,
       },
-      nearestHub: {
-        id: nearestPcHub.id,
-        hubName: nearestPcHub.hubName,
-        site: nearestPcHub.site,
-        url: nearestPcHub.url,
-        distanceKm: nearestPcHub.distanceKm,
+      nearestAcademicInstitution: {
+        id: nearestAcademicInstitution.id,
+        institutionCode: nearestAcademicInstitution.institutionCode,
+        locationLabel: nearestAcademicInstitution.locationLabel,
+        site: nearestAcademicInstitution.site,
+        url: nearestAcademicInstitution.url || null,
+        distanceKm: nearestAcademicInstitution.distanceKm,
+      },
+      nearestPrimaryCareCtu: {
+        id: nearestPrimaryCareCtu.id,
+        ctuCode: nearestPrimaryCareCtu.ctuCode,
+        locationLabel: nearestPrimaryCareCtu.locationLabel,
+        site: nearestPrimaryCareCtu.site,
+        url: nearestPrimaryCareCtu.url || null,
+        distanceKm: nearestPrimaryCareCtu.distanceKm,
+      },
+      nearestSecondaryCareCtu: {
+        id: nearestSecondaryCareCtu.id,
+        ctuCode: nearestSecondaryCareCtu.ctuCode,
+        locationLabel: nearestSecondaryCareCtu.locationLabel,
+        site: nearestSecondaryCareCtu.site,
+        url: nearestSecondaryCareCtu.url || null,
+        distanceKm: nearestSecondaryCareCtu.distanceKm,
       },
       dataset: buildDatasetStatusPayload().dataset,
       nhsSearchUrl: `https://www.nhs.uk/service-search/find-a-gp/?locationName=${encodeURIComponent(postcode)}&suppressInvalidLoc=False`,
@@ -814,13 +885,13 @@ async function handleResolvePractice(res, parsedUrl) {
 
 async function handleSeededPractices(res) {
   sendJson(res, 200, {
-    practices: practiceMap.map((entry) => entry.fullPracticeName),
+    practices: practiceSuggestions,
     dataset: buildDatasetStatusPayload().dataset,
   });
 }
 
 async function handleCentreRecords(res) {
-  await scHydrationPromise;
+  await supportDatasetHydrationPromise;
   sendJson(res, 200, {
     pcHubRecords: pcHubRecords.map((hub) => ({
       id: hub.id,
@@ -842,6 +913,39 @@ async function handleCentreRecords(res) {
       lat: hub.lat,
       lon: hub.lon,
     })),
+    academicInstitutionRecords: academicInstitutionRecords.map((institution) => ({
+      id: institution.id,
+      institutionCode: institution.institutionCode,
+      locationLabel: institution.locationLabel,
+      site: institution.site,
+      url: institution.url || null,
+      sourceBasis: institution.sourceBasis || null,
+      lat: institution.lat,
+      lon: institution.lon,
+    })),
+    primaryCareCtuRecords: primaryCareCtuRecords.map((ctu) => ({
+      id: ctu.id,
+      ctuCode: ctu.ctuCode,
+      locationLabel: ctu.locationLabel,
+      site: ctu.site,
+      postcode: ctu.postcode || null,
+      url: ctu.url || null,
+      lat: ctu.lat,
+      lon: ctu.lon,
+    })),
+    secondaryCareCtuRecords: secondaryCareCtuRecords.map((ctu) => ({
+      id: ctu.id,
+      ctuCode: ctu.ctuCode,
+      locationLabel: ctu.locationLabel,
+      site: ctu.site,
+      postcode: ctu.postcode || null,
+      url: ctu.url || null,
+      lat: ctu.lat,
+      lon: ctu.lon,
+      ukcrcRegistrationId: ctu.ukcrcRegistrationId || null,
+      note: ctu.note || null,
+      sourceBasis: ctu.sourceBasis || null,
+    })),
   });
 }
 
@@ -859,8 +963,8 @@ async function handleRefreshPracticeData(res) {
 
 initializePracticeDataset();
 
-scHydrationPromise = hydrateHubCoordinates(scHubRecords, 'SC-CRDC').catch((error) => {
-  console.warn(`SC-CRDC coordinate hydration failed: ${error.message}`);
+supportDatasetHydrationPromise = hydrateSupportDatasets().catch((error) => {
+  console.warn(`Support dataset coordinate hydration failed: ${error.message}`);
 });
 
 const server = http.createServer(async (req, res) => {
@@ -900,9 +1004,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  const filePath = sanitizePath(parsedUrl.pathname);
-  if (!filePath.startsWith(ROOT)) {
-    sendJson(res, 403, { error: 'Forbidden' });
+  const filePath = resolvePublicFilePath(parsedUrl.pathname);
+  if (!filePath) {
+    sendJson(res, 404, { error: 'Not found' });
     return;
   }
   sendFile(res, filePath);

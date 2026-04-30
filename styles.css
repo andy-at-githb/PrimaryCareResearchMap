@@ -290,8 +290,19 @@ input:focus {
 }
 
 .legend-panel {
-  padding: 22px 20px;
   align-self: stretch;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.legend-scroll {
+  padding: 22px 20px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  scrollbar-gutter: stable;
 }
 
 .legend-subhead {
@@ -309,6 +320,10 @@ input:focus {
   gap: 12px;
 }
 
+.hub-legend-compact {
+  gap: 8px;
+}
+
 .hub-legend li {
   padding: 12px 14px;
   border-radius: 16px;
@@ -316,9 +331,19 @@ input:focus {
   border: 1px solid rgba(18, 18, 18, 0.08);
 }
 
+.hub-legend-compact li {
+  padding: 9px 12px;
+  font-size: 0.95rem;
+}
+
 .hub-legend li.is-active {
   background: var(--accent-soft);
   border-color: rgba(31, 86, 204, 0.3);
+}
+
+.hub-legend li.is-hover-preview {
+  background: var(--accent-soft);
+  border-color: rgba(31, 86, 204, 0.22);
 }
 
 .hub-index {
@@ -406,12 +431,24 @@ button:disabled {
 
   .legend-panel {
     order: 2;
+    height: auto !important;
+  }
+
+  .legend-scroll {
+    overflow: visible;
   }
 }
 
 @media (max-width: 860px) {
   .page-shell {
     padding: 20px 16px 28px;
+  }
+
+  .diagram-panel {
+    position: sticky;
+    top: 12px;
+    z-index: 5;
+    background: var(--panel-strong);
   }
 
   .summary-grid {

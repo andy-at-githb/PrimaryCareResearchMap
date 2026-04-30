@@ -43,12 +43,18 @@ async function run() {
   assert(centres.response.ok, 'Centre records endpoint failed');
   assert(centres.payload.pcHubRecords?.length === 14, 'Expected 14 PC-CRDC records');
   assert(centres.payload.scHubRecords?.length === 15, 'Expected 15 SC-CRDC records');
+  assert(centres.payload.academicInstitutionRecords?.length === 55, 'Expected 55 academic institution records');
+  assert(centres.payload.primaryCareCtuRecords?.length === 1, 'Expected 1 PC-CTU record');
+  assert(centres.payload.secondaryCareCtuRecords?.length === 50, 'Expected 50 SC-CTU records');
   checks.push('centre-records');
 
   const adam = await requestJson('/api/resolve-practice?practice=The%20Adam%20Practice');
   assert(adam.response.ok && adam.payload.ok, 'Known practice lookup failed');
   assert(adam.payload.verifiedPractice.practiceCode === 'J81006', 'Known practice did not resolve to The Adam Practice code');
   assert(adam.payload.nearestPcHub.id === 1, 'Known practice did not resolve to expected nearest PC-CRDC');
+  assert(adam.payload.nearestAcademicInstitution?.institutionCode, 'Known practice did not return a nearest academic institution');
+  assert(adam.payload.nearestPrimaryCareCtu?.ctuCode, 'Known practice did not return a nearest PC-CTU');
+  assert(adam.payload.nearestSecondaryCareCtu?.ctuCode, 'Known practice did not return a nearest SC-CTU');
   checks.push('known-practice');
 
   const ambiguous = await requestJson('/api/resolve-practice?practice=Park%20Surgery');

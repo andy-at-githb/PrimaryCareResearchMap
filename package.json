@@ -1,8 +1,8 @@
 {
   "name": "gp-level-hub-spoke-app",
-  "version": "1.0.0",
+  "version": "3.1.0",
   "private": true,
-  "description": "Primary Care Research Map - England GP-level hub-and-spoke app",
+  "description": "Primary Care Commercial Research Explorer - England app",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

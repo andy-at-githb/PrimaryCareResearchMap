@@ -3,18 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Primary Care Research Map - England - GP Level</title>
-    <link rel="stylesheet" href="./styles.css?v=2026-04-29e" />
+    <title>Primary Care Commercial Research Explorer - England (Dev)</title>
+    <link rel="stylesheet" href="./styles.css?v=2026-04-30x" />
   </head>
   <body>
     <div class="page-shell">
       <header class="page-header">
         <div>
-          <p class="section-title">PRIMARY CARE COMMERCIAL RESEARCH EXPLORER - England (Dev) <span class="app-version">v.2.1</span></p>
+          <p class="section-title">PRIMARY CARE COMMERCIAL RESEARCH EXPLORER - England (Dev) <span class="app-version">v.3.1</span></p>
           <p class="intro">
             Enter a GP practice name to verify it against the current NHS England Digital GP-practice mapping snapshot,
             extract its postcode, and map it to the nearest Primary Care - Commercial Research Delivery Centre (PC-CRDC)
-            and Secondary Care - Commercial Research Delivery Centre (SC-CRDC).
+            and Secondary Care - Commercial Research Delivery Centre (SC-CRDC), the nearest Primary Care (or related)
+            University department, the nearest Primary Care Clinical Trials Unit (PC-CTU), and the nearest Secondary Care
+            (or specialist) Clinical Trials Unit (SC-CTU).
           </p>
         </div>
       </header>
@@ -87,6 +89,30 @@
               <dt>SC-CRDC distance</dt>
               <dd id="summary-sc-distance">Not verified yet</dd>
             </div>
+            <div>
+              <dt>Nearest Primary Care University Department</dt>
+              <dd id="summary-academic-hub">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>University department distance</dt>
+              <dd id="summary-academic-distance">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Nearest PC-CTU</dt>
+              <dd id="summary-ctu-hub">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>PC-CTU distance</dt>
+              <dd id="summary-ctu-distance">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>Nearest SC-CTU</dt>
+              <dd id="summary-sc-ctu-hub">Not verified yet</dd>
+            </div>
+            <div>
+              <dt>SC-CTU distance</dt>
+              <dd id="summary-sc-ctu-distance">Not verified yet</dd>
+            </div>
             <div class="summary-span-2">
               <dt>Verification source</dt>
               <div class="summary-source-row">
@@ -109,16 +135,24 @@
         </section>
 
         <aside class="legend-panel">
-          <div class="legend-header">
-            <p class="section-title">CRDC - number directory</p>
-            <p>
-              The verified nearest PC-CRDC and nearest SC-CRDC are highlighted in the diagram and in these lists. Blue text indicates linked practice or centre details.
-            </p>
+          <div class="legend-scroll">
+            <div class="legend-header">
+              <p class="section-title">Directory</p>
+              <p>
+                The verified nearest PC-CRDC and nearest SC-CRDC are highlighted in the diagram and in these lists. Blue text indicates linked practice or centre details.
+              </p>
+            </div>
+            <p class="legend-subhead">Primary Care Commercial Research Delivery Centers - PC-CRDCs</p>
+            <ol id="pc-hub-legend" class="hub-legend"></ol>
+            <p class="legend-subhead">Secondary Care Commercial Research Delivery Centers - SC-CRDCs</p>
+            <ol id="sc-hub-legend" class="hub-legend"></ol>
+            <p class="legend-subhead">University Primary Care or Related Departments</p>
+            <ol id="university-legend" class="hub-legend hub-legend-compact"></ol>
+            <p class="legend-subhead">Primary Care Clinical Trials Units - PC-CTUs</p>
+            <ol id="ctu-legend" class="hub-legend hub-legend-compact"></ol>
+            <p class="legend-subhead">Specialist/Secondary Care Clinical Trials Units - SC-CTUs</p>
+            <ol id="sc-ctu-legend" class="hub-legend hub-legend-compact"></ol>
           </div>
-          <p class="legend-subhead">PC-CRDCs</p>
-          <ol id="pc-hub-legend" class="hub-legend"></ol>
-          <p class="legend-subhead">SC-CRDCs</p>
-          <ol id="sc-hub-legend" class="hub-legend"></ol>
         </aside>
       </main>
 
@@ -127,6 +161,6 @@
       </footer>
     </div>
 
-    <script type="module" src="./main.js?v=2026-04-29e"></script>
+    <script type="module" src="./main.js?v=2026-04-30x"></script>
   </body>
 </html>
