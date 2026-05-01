@@ -14,6 +14,12 @@ async function requestJson(path, options = {}) {
   return { response, payload };
 }
 
+async function requestText(path, options = {}) {
+  const response = await fetch(`${BASE_URL}${path}`, options);
+  const body = await response.text();
+  return { response, body };
+}
+
 function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
@@ -27,6 +33,17 @@ async function run() {
   const healthText = await healthResponse.text();
   assert(healthResponse.ok && healthText.trim() === 'ok', 'Health check failed');
   checks.push('healthz');
+
+  const homepage = await requestText('/');
+  assert(homepage.response.ok, 'Homepage failed to load');
+  assert(homepage.response.headers.get('content-security-policy')?.includes("default-src 'self'"), 'Homepage missing expected CSP header');
+  assert(homepage.response.headers.get('x-content-type-options') === 'nosniff', 'Homepage missing nosniff header');
+  checks.push('security-headers');
+
+  const manifest = await requestJson('/site.webmanifest');
+  assert(manifest.response.ok, 'Manifest failed to load');
+  assert(manifest.payload?.icons?.length >= 2, 'Manifest icons look incomplete');
+  checks.push('webmanifest');
 
   const seeded = await requestJson('/api/seeded-practices');
   assert(seeded.response.ok, 'Seeded practices endpoint failed');
@@ -74,6 +91,15 @@ async function run() {
   const unknown = await requestJson('/api/resolve-practice?practice=zzzz%20not%20a%20real%20practice');
   assert(unknown.response.status === 502, 'Unknown practice should return verification failure');
   checks.push('unknown-practice');
+
+  const blockedRefresh = await requestJson('/api/refresh-practice-data', {
+    method: 'POST',
+    headers: {
+      Origin: 'https://example.com',
+    },
+  });
+  assert(blockedRefresh.response.status === 403, 'Cross-origin manual refresh should be blocked');
+  checks.push('refresh-origin-guard');
 
   console.log(`Smoke test passed for ${BASE_URL}`);
   console.log(`Checks: ${checks.join(', ')}`);

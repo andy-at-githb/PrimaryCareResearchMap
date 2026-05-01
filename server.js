@@ -24,8 +24,25 @@ const DATASET_PREFIX = 'gp-reg-pat-prac-map_';
 const DATASET_PATTERN = /^gp-reg-pat-prac-map_(\d{4})-(\d{2})\.csv$/;
 const REFRESH_INTERVAL_HOURS = 12;
 const REFRESH_INTERVAL_MS = REFRESH_INTERVAL_HOURS * 60 * 60 * 1000;
+const MANUAL_REFRESH_MIN_INTERVAL_MS = 30 * 1000;
+const FETCH_TIMEOUT_MS = 15 * 1000;
+const MAX_PRACTICE_NAME_LENGTH = 160;
+const MAX_POSTCODE_LENGTH = 16;
+const MAX_PRACTICE_CODE_LENGTH = 24;
 const ACADEMIC_INSTITUTIONS_FILE = path.join(DATA_DIR, 'academic-primary-care-institutions.json');
 const SECONDARY_CTU_FILE = path.join(DATA_DIR, 'secondary-care-ctus.json');
+const HTML_CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "connect-src 'self'",
+  "font-src 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "img-src 'self' data:",
+  "object-src 'none'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+].join('; ');
 
 const MONTH_NAMES = [
   'January',
@@ -236,6 +253,7 @@ let practiceMap = [];
 let practiceSuggestions = [];
 let datasetRefreshPromise = null;
 let supportDatasetHydrationPromise = null;
+const postcodeGeoCache = new Map();
 
 const datasetState = {
   current: null,
@@ -249,6 +267,7 @@ const datasetState = {
     mode: 'startup',
   },
 };
+let lastManualRefreshRequestedAt = 0;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -264,36 +283,53 @@ const MIME = {
 };
 
 function sendText(res, status, body, contentType = 'text/plain; charset=utf-8') {
-  res.writeHead(status, {
-    'Content-Type': contentType,
-    'Cache-Control': 'no-store',
-  });
+  res.writeHead(status, buildResponseHeaders(contentType));
   res.end(body);
 }
 
 function sendJson(res, status, payload) {
   const body = JSON.stringify(payload, null, 2);
-  res.writeHead(status, {
-    'Content-Type': 'application/json; charset=utf-8',
-    'Cache-Control': 'no-store',
-  });
+  res.writeHead(status, buildResponseHeaders('application/json; charset=utf-8'));
   res.end(body);
 }
 
 function sendFile(res, filePath) {
   const ext = path.extname(filePath).toLowerCase();
   const type = MIME[ext] || 'application/octet-stream';
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      sendJson(res, 404, { error: 'Not found' });
-      return;
-    }
-    res.writeHead(200, {
-      'Content-Type': type,
-      'Cache-Control': 'no-store',
-    });
-    res.end(data);
+  const stream = fs.createReadStream(filePath);
+
+  stream.on('open', () => {
+    res.writeHead(200, buildResponseHeaders(type));
   });
+
+  stream.on('error', (err) => {
+    if (!res.headersSent) {
+      sendJson(res, 404, { error: 'Not found' });
+    } else {
+      res.destroy(err);
+    }
+  });
+
+  stream.pipe(res);
+}
+
+function buildResponseHeaders(contentType) {
+  const headers = {
+    'Content-Type': contentType,
+    'Cache-Control': 'no-store',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Resource-Policy': 'same-origin',
+    'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+  };
+
+  if (contentType.startsWith('text/html')) {
+    headers['Content-Security-Policy'] = HTML_CONTENT_SECURITY_POLICY;
+  }
+
+  return headers;
 }
 
 const PUBLIC_FILE_PATHS = new Map([
@@ -326,6 +362,103 @@ function resolvePublicFilePath(urlPath) {
   }
 
   return null;
+}
+
+function getRequestOrigin(req) {
+  const trustForwardedHeaders = RUNNING_ON_RENDER;
+  const forwardedProto = trustForwardedHeaders
+    ? String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim()
+    : '';
+  const forwardedHost = trustForwardedHeaders
+    ? String(req.headers['x-forwarded-host'] || '').split(',')[0].trim()
+    : '';
+  const protocol = forwardedProto || (RUNNING_ON_RENDER ? 'https' : 'http');
+  const host = forwardedHost || req.headers.host;
+
+  if (!host) {
+    return null;
+  }
+
+  return `${protocol}://${host}`;
+}
+
+function isSameOriginRequest(req) {
+  const expectedOrigin = getRequestOrigin(req);
+  if (!expectedOrigin) {
+    return false;
+  }
+
+  const originHeader = req.headers.origin;
+  if (originHeader) {
+    return originHeader === expectedOrigin;
+  }
+
+  const refererHeader = req.headers.referer;
+  if (!refererHeader) {
+    return false;
+  }
+
+  try {
+    return new URL(refererHeader).origin === expectedOrigin;
+  } catch (_) {
+    return false;
+  }
+}
+
+function isSafeHttpUrl(value) {
+  if (!value) return false;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch (_) {
+    return false;
+  }
+}
+
+function assertSafeHttpUrl(value, label) {
+  if (!isSafeHttpUrl(value)) {
+    throw new Error(`${label} must use http or https`);
+  }
+}
+
+function validateResolvePracticeParams({ practiceName, postcode, practiceCode }) {
+  const createValidationError = (message) => {
+    const error = new Error(message);
+    error.statusCode = 400;
+    return error;
+  };
+
+  if (!practiceName) {
+    throw createValidationError('Missing practice parameter');
+  }
+  if (practiceName.length > MAX_PRACTICE_NAME_LENGTH) {
+    throw createValidationError(`Practice name is too long (max ${MAX_PRACTICE_NAME_LENGTH} characters)`);
+  }
+  if (postcode && postcode.length > MAX_POSTCODE_LENGTH) {
+    throw createValidationError(`Postcode override is too long (max ${MAX_POSTCODE_LENGTH} characters)`);
+  }
+  if (practiceCode && practiceCode.length > MAX_PRACTICE_CODE_LENGTH) {
+    throw createValidationError(`Practice code is too long (max ${MAX_PRACTICE_CODE_LENGTH} characters)`);
+  }
+}
+
+async function fetchWithTimeout(url, options = {}) {
+  assertSafeHttpUrl(url, 'External request URL');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error(`External request timed out after ${FETCH_TIMEOUT_MS / 1000} seconds`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function decodeHtml(str) {
@@ -580,11 +713,19 @@ function nearestHubForCoords(records, lat, lon) {
 }
 
 async function geocodePostcode(postcode) {
-  const response = await fetch(`${POSTCODE_API}${encodeURIComponent(postcode)}`);
+  const normalizedPostcode = postcode.trim().toUpperCase();
+  const cached = postcodeGeoCache.get(normalizedPostcode);
+  if (cached) {
+    return cached;
+  }
+
+  const response = await fetchWithTimeout(`${POSTCODE_API}${encodeURIComponent(normalizedPostcode)}`);
   const payload = await response.json();
   if (!response.ok || !payload.result) {
     throw new Error(payload.error || 'Postcode lookup failed');
   }
+
+  postcodeGeoCache.set(normalizedPostcode, payload.result);
   return payload.result;
 }
 
@@ -611,7 +752,7 @@ async function hydrateSupportDatasets() {
 }
 
 async function fetchText(url) {
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: { 'user-agent': 'Research Map Hub-Spoke App/1.0' },
   });
   if (!response.ok) {
@@ -621,7 +762,7 @@ async function fetchText(url) {
 }
 
 async function fetchBuffer(url) {
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: { 'user-agent': 'Research Map Hub-Spoke App/1.0' },
   });
   if (!response.ok) {
@@ -660,11 +801,11 @@ function extractMappingResourceFromPage(pageHtml, publicationUrl) {
     const href = new URL(match[1], publicationUrl).href;
     const linkText = stripTags(match[2]);
     if (!/mapping/i.test(linkText) || !/gp practice/i.test(linkText)) continue;
+    if (!isSafeHttpUrl(href)) continue;
     const resourceType = /\.zip(?:$|\?)/i.test(href) || /\bzip\b/i.test(linkText) ? 'zip' : 'csv';
     return {
       mappingResourceUrl: href,
       resourceType,
-      resourceLabel: linkText,
     };
   }
   return null;
@@ -797,12 +938,13 @@ async function handleResolvePractice(res, parsedUrl) {
   const practice = parsedUrl.searchParams.get('practice')?.trim();
   const postcodeOverride = parsedUrl.searchParams.get('postcode')?.trim();
   const practiceCode = parsedUrl.searchParams.get('practiceCode')?.trim();
-  if (!practice) {
-    sendJson(res, 400, { error: 'Missing practice parameter' });
-    return;
-  }
 
   try {
+    validateResolvePracticeParams({
+      practiceName: practice,
+      postcode: postcodeOverride,
+      practiceCode,
+    });
     await supportDatasetHydrationPromise;
     const verified = verifyPracticeFromDataset(practice, { practiceCode });
     const postcode = postcodeOverride || verified.postcode;
@@ -881,7 +1023,8 @@ async function handleResolvePractice(res, parsedUrl) {
       });
       return;
     }
-    sendJson(res, 502, { ok: false, error: error.message });
+    const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 502;
+    sendJson(res, statusCode, { ok: false, error: error.message });
   }
 }
 
@@ -955,7 +1098,27 @@ async function handleDatasetStatus(res) {
   sendJson(res, 200, buildDatasetStatusPayload());
 }
 
-async function handleRefreshPracticeData(res) {
+async function handleRefreshPracticeData(req, res) {
+  if (!isSameOriginRequest(req)) {
+    sendJson(res, 403, { error: 'Manual dataset refresh is only allowed from the app origin' });
+    return;
+  }
+
+  const now = Date.now();
+  if (!datasetRefreshPromise && lastManualRefreshRequestedAt > 0) {
+    const msRemaining = MANUAL_REFRESH_MIN_INTERVAL_MS - (now - lastManualRefreshRequestedAt);
+    if (msRemaining > 0) {
+      sendJson(res, 429, {
+        error: `Manual dataset refresh is temporarily rate limited. Try again in ${Math.ceil(msRemaining / 1000)} seconds.`,
+      });
+      return;
+    }
+  }
+
+  if (!datasetRefreshPromise) {
+    lastManualRefreshRequestedAt = now;
+  }
+
   const payload = await refreshPracticeDataset({ reason: 'manual' });
   sendJson(res, payload.refresh.lastResult === 'error' ? 502 : 200, {
     ok: payload.refresh.lastResult !== 'error',
@@ -973,21 +1136,37 @@ const server = http.createServer(async (req, res) => {
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
 
   if (parsedUrl.pathname === '/api/resolve-practice') {
+    if (req.method !== 'GET') {
+      sendJson(res, 405, { error: 'Method not allowed' });
+      return;
+    }
     await handleResolvePractice(res, parsedUrl);
     return;
   }
 
   if (parsedUrl.pathname === '/api/seeded-practices') {
+    if (req.method !== 'GET') {
+      sendJson(res, 405, { error: 'Method not allowed' });
+      return;
+    }
     await handleSeededPractices(res);
     return;
   }
 
   if (parsedUrl.pathname === '/api/centre-records') {
+    if (req.method !== 'GET') {
+      sendJson(res, 405, { error: 'Method not allowed' });
+      return;
+    }
     await handleCentreRecords(res);
     return;
   }
 
   if (parsedUrl.pathname === '/api/practice-dataset-status') {
+    if (req.method !== 'GET') {
+      sendJson(res, 405, { error: 'Method not allowed' });
+      return;
+    }
     await handleDatasetStatus(res);
     return;
   }
@@ -997,7 +1176,7 @@ const server = http.createServer(async (req, res) => {
       sendJson(res, 405, { error: 'Method not allowed' });
       return;
     }
-    await handleRefreshPracticeData(res);
+    await handleRefreshPracticeData(req, res);
     return;
   }
 

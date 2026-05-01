@@ -1,7 +1,7 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const NHS_GP_SEARCH = 'https://www.nhs.uk/service-search/find-a-gp/';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const APP_ASSET_VERSION = '2026-04-30y';
+const APP_ASSET_VERSION = '2026-05-01b';
 const CLEAN_MAP_ASSET_URL = `./assets/UK_CRDC_Map_clean.png?v=${APP_ASSET_VERSION}`;
 const MAP_RECT = { x: 875, y: 76, w: 635, h: 910 };
 const MAP_UNDERLAY_SHIFT_X = 26;
@@ -92,6 +92,9 @@ const summarySource = document.querySelector('#summary-source');
 function createSvgEl(tag, attrs = {}) {
   const el = document.createElementNS(SVG_NS, tag);
   Object.entries(attrs).forEach(([key, value]) => {
+    if (value == null) {
+      return;
+    }
     if (key === 'xlink:href') {
       el.setAttributeNS(XLINK_NS, key, String(value));
       return;
@@ -132,8 +135,9 @@ function drawLine(group, { x1, y1, x2, y2, sw = 4, dash = null, stroke = '#15151
 }
 
 function drawText(group, { x, y, lines, size = 30, color = '#121212', anchor = 'middle', weight = 400, href = null, lineGap = 1.2 }) {
-  const parent = href
-    ? createSvgEl('a', { href, 'xlink:href': href, target: '_blank', rel: 'noreferrer noopener' })
+  const safeHref = toSafeHttpUrl(href);
+  const parent = safeHref
+    ? createSvgEl('a', { href: safeHref, 'xlink:href': safeHref, target: '_blank', rel: 'noreferrer noopener' })
     : group;
   const startY = y - ((lines.length - 1) * size * lineGap) / 2;
   lines.forEach((line, index) => {
@@ -145,12 +149,12 @@ function drawText(group, { x, y, lines, size = 30, color = '#121212', anchor = '
       'font-size': size,
       'font-weight': weight,
       fill: color,
-      style: href ? 'cursor:pointer;' : '',
+      cursor: safeHref ? 'pointer' : null,
     });
     text.textContent = line;
     parent.appendChild(text);
   });
-  if (href) group.appendChild(parent);
+  if (safeHref) group.appendChild(parent);
 }
 
 function wrap(text, width = 24) {
@@ -303,6 +307,19 @@ function hasCentreRecordCache() {
   );
 }
 
+function toSafeHttpUrl(value) {
+  if (!value) return null;
+  try {
+    const parsed = new URL(value, window.location.origin);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+    return parsed.href;
+  } catch (_) {
+    return null;
+  }
+}
+
 function isHoveredMapRecord(type, id) {
   return state.hoveredMapRecordType === type && state.hoveredMapRecordId === id;
 }
@@ -379,8 +396,16 @@ function setFieldLink(node, label, href, fallback) {
 }
 
 function createExternalLink(label, href, className = '') {
+  const safeHref = toSafeHttpUrl(href);
+  if (!safeHref) {
+    const fallback = document.createElement('span');
+    fallback.textContent = label;
+    if (className) fallback.className = className;
+    return fallback;
+  }
+
   const link = document.createElement('a');
-  link.href = href;
+  link.href = safeHref;
   link.target = '_blank';
   link.rel = 'noreferrer noopener';
   link.textContent = label;
@@ -780,7 +805,7 @@ function drawDiagram() {
     'xlink:href': CLEAN_MAP_ASSET_URL,
     opacity: 0.42,
     preserveAspectRatio: 'xMidYMid meet',
-    style: 'pointer-events:none;',
+    'pointer-events': 'none',
   }));
 
   const { pcPositions, scPositions, universityPositions, pcCtuPositions, scCtuPositions } = layoutProjectedCentres();
@@ -1220,7 +1245,7 @@ async function resolvePractice() {
     state.selectedPracticeCode = payload.verifiedPractice.practiceCode;
     postcodeInput.value = payload.postcodeLookup.postcode;
     postcodeInput.dataset.autofilled = 'true';
-    nhsLink.href = payload.nhsSearchUrl;
+    nhsLink.href = toSafeHttpUrl(payload.nhsSearchUrl) || NHS_GP_SEARCH;
 
     if (payload.dataset && state.datasetStatus?.refresh) {
       applyDatasetStatus({

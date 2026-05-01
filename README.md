@@ -313,3 +313,12 @@ For a simple hosted review flow, the cleanest option is to place this app folder
 4. add a clearer disambiguation flow for close practice-name matches
 5. persist a small dataset manifest if you want a longer audit trail of automatic refresh events
 6. add export/share output for the populated diagram state
+
+## Security and deployment hardening
+
+The app now includes a small security hardening pass aimed at the deployed web version:
+- HTML responses send a Content Security Policy and additional browser hardening headers
+- external static links now use `rel=\"noreferrer noopener\"`
+- the manual dataset-refresh endpoint blocks cross-origin requests
+- the manual dataset-refresh endpoint is lightly rate limited
+- the `render-upload` sync script now clears stale copied files before rebuilding the deploy bundle
