@@ -1,6 +1,6 @@
 {
   "name": "gp-level-hub-spoke-app",
-  "version": "3.11.0",
+  "version": "3.12.0",
   "private": true,
   "description": "Primary Care Commercial Research Explorer - England app",
   "main": "server.js",

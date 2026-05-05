@@ -1,7 +1,7 @@
 [
   {
     "id": 1,
-    "ctuCode": "SCTU1",
+    "ctuCode": "SC-CTU1",
     "site": "Barts and the London Pragmatic CTU",
     "locationLabel": "London",
     "ukcrcRegistrationId": "32",
@@ -13,7 +13,7 @@
   },
   {
     "id": 2,
-    "ctuCode": "SCTU2",
+    "ctuCode": "SC-CTU2",
     "site": "Barts Clinical Trials Unit",
     "locationLabel": "London",
     "ukcrcRegistrationId": "4",
@@ -25,7 +25,7 @@
   },
   {
     "id": 3,
-    "ctuCode": "SCTU3",
+    "ctuCode": "SC-CTU3",
     "site": "Birmingham Clinical Trials Unit",
     "locationLabel": "Birmingham",
     "ukcrcRegistrationId": "1",
@@ -37,7 +37,7 @@
   },
   {
     "id": 4,
-    "ctuCode": "SCTU4",
+    "ctuCode": "SC-CTU4",
     "site": "Brighton and Sussex Clinical Trials Unit",
     "locationLabel": "Brighton",
     "ukcrcRegistrationId": "66",
@@ -49,7 +49,7 @@
   },
   {
     "id": 5,
-    "ctuCode": "SCTU5",
+    "ctuCode": "SC-CTU5",
     "site": "Bristol Trials Centre",
     "locationLabel": "Bristol",
     "ukcrcRegistrationId": "70",
@@ -61,7 +61,7 @@
   },
   {
     "id": 6,
-    "ctuCode": "SCTU6",
+    "ctuCode": "SC-CTU6",
     "site": "CaCTUS (Cancer Clinical Trials Unit Scotland)",
     "locationLabel": "Glasgow",
     "ukcrcRegistrationId": "3",
@@ -73,7 +73,7 @@
   },
   {
     "id": 7,
-    "ctuCode": "SCTU7",
+    "ctuCode": "SC-CTU7",
     "site": "Cambridge Clinical Trials Unit (CCTU)",
     "locationLabel": "Cambridge",
     "ukcrcRegistrationId": "55",
@@ -85,7 +85,7 @@
   },
   {
     "id": 8,
-    "ctuCode": "SCTU8",
+    "ctuCode": "SC-CTU8",
     "site": "Cambridge Epidemiology and Trials Unit",
     "locationLabel": "Cambridge",
     "ukcrcRegistrationId": "64",
@@ -97,7 +97,7 @@
   },
   {
     "id": 9,
-    "ctuCode": "SCTU9",
+    "ctuCode": "SC-CTU9",
     "site": "Cancer Research UK Clinical Trials Unit (CRCTU)",
     "locationLabel": "Birmingham",
     "ukcrcRegistrationId": "6",
@@ -109,7 +109,7 @@
   },
   {
     "id": 10,
-    "ctuCode": "SCTU10",
+    "ctuCode": "SC-CTU10",
     "site": "Centre for Healthcare Randomised Trials (CHaRT)",
     "locationLabel": "Aberdeen",
     "ukcrcRegistrationId": "7",
@@ -121,7 +121,7 @@
   },
   {
     "id": 11,
-    "ctuCode": "SCTU11",
+    "ctuCode": "SC-CTU11",
     "site": "Centre for Trials Research",
     "locationLabel": "Cardiff",
     "ukcrcRegistrationId": "63",
@@ -133,7 +133,7 @@
   },
   {
     "id": 12,
-    "ctuCode": "SCTU12",
+    "ctuCode": "SC-CTU12",
     "site": "Comprehensive CTU at UCL",
     "locationLabel": "London",
     "ukcrcRegistrationId": "56",
@@ -145,7 +145,7 @@
   },
   {
     "id": 13,
-    "ctuCode": "SCTU13",
+    "ctuCode": "SC-CTU13",
     "site": "CR UK and UCL Cancer Trials Centre",
     "locationLabel": "London",
     "ukcrcRegistrationId": "5",
@@ -157,7 +157,7 @@
   },
   {
     "id": 14,
-    "ctuCode": "SCTU14",
+    "ctuCode": "SC-CTU14",
     "site": "Derby Clinical Trials Support Unit (DCTSU)",
     "locationLabel": "Derby",
     "ukcrcRegistrationId": "67",
@@ -169,7 +169,7 @@
   },
   {
     "id": 15,
-    "ctuCode": "SCTU15",
+    "ctuCode": "SC-CTU15",
     "site": "Diabetes Trials Unit, University of Oxford",
     "locationLabel": "Oxford",
     "ukcrcRegistrationId": "14",
@@ -181,7 +181,7 @@
   },
   {
     "id": 16,
-    "ctuCode": "SCTU16",
+    "ctuCode": "SC-CTU16",
     "site": "Edinburgh Clinical Trials Unit",
     "locationLabel": "Edinburgh",
     "ukcrcRegistrationId": "15",
@@ -193,7 +193,7 @@
   },
   {
     "id": 17,
-    "ctuCode": "SCTU17",
+    "ctuCode": "SC-CTU17",
     "site": "Exeter Clinical Trials Unit",
     "locationLabel": "Exeter",
     "ukcrcRegistrationId": "65",
@@ -205,7 +205,7 @@
   },
   {
     "id": 18,
-    "ctuCode": "SCTU18",
+    "ctuCode": "SC-CTU18",
     "site": "Glasgow Clinical Trials Unit",
     "locationLabel": "Glasgow",
     "ukcrcRegistrationId": "16",
@@ -217,7 +217,7 @@
   },
   {
     "id": 19,
-    "ctuCode": "SCTU19",
+    "ctuCode": "SC-CTU19",
     "site": "Hull Health Trials Unit",
     "locationLabel": "Hull",
     "ukcrcRegistrationId": "68",
@@ -229,7 +229,7 @@
   },
   {
     "id": 20,
-    "ctuCode": "SCTU20",
+    "ctuCode": "SC-CTU20",
     "site": "Imperial Clinical Trials Unit",
     "locationLabel": "London",
     "ukcrcRegistrationId": "18",
@@ -241,7 +241,7 @@
   },
   {
     "id": 21,
-    "ctuCode": "SCTU21",
+    "ctuCode": "SC-CTU21",
     "site": "Intensive Care National Audit and Research Centre (ICNARC) CTU",
     "locationLabel": "London",
     "ukcrcRegistrationId": "42",
@@ -253,7 +253,7 @@
   },
   {
     "id": 22,
-    "ctuCode": "SCTU22",
+    "ctuCode": "SC-CTU22",
     "site": "Keele Clinical Trials Unit",
     "locationLabel": "Keele",
     "ukcrcRegistrationId": "36",
@@ -265,7 +265,7 @@
   },
   {
     "id": 23,
-    "ctuCode": "SCTU23",
+    "ctuCode": "SC-CTU23",
     "site": "King's Clinical Trials Unit at King's Health Partners",
     "locationLabel": "London",
     "ukcrcRegistrationId": "53",
@@ -277,7 +277,7 @@
   },
   {
     "id": 24,
-    "ctuCode": "SCTU24",
+    "ctuCode": "SC-CTU24",
     "site": "Lancashire Clinical Trials Unit",
     "locationLabel": "Preston",
     "ukcrcRegistrationId": "69",
@@ -289,7 +289,7 @@
   },
   {
     "id": 25,
-    "ctuCode": "SCTU25",
+    "ctuCode": "SC-CTU25",
     "site": "Leeds Clinical Trials Research Unit",
     "locationLabel": "Leeds",
     "ukcrcRegistrationId": "41",
@@ -301,7 +301,7 @@
   },
   {
     "id": 26,
-    "ctuCode": "SCTU26",
+    "ctuCode": "SC-CTU26",
     "site": "Leicester Clinical Trials Unit",
     "locationLabel": "Leicester",
     "ukcrcRegistrationId": "43",
@@ -313,7 +313,7 @@
   },
   {
     "id": 27,
-    "ctuCode": "SCTU27",
+    "ctuCode": "SC-CTU27",
     "site": "Liverpool Trials Collaborative / Liverpool Clinical Trials Centre",
     "locationLabel": "Liverpool",
     "ukcrcRegistrationId": "12",
@@ -325,7 +325,7 @@
   },
   {
     "id": 28,
-    "ctuCode": "SCTU28",
+    "ctuCode": "SC-CTU28",
     "site": "London School of Hygiene and Tropical Medicine Clinical Trials Unit",
     "locationLabel": "London",
     "ukcrcRegistrationId": "44",
@@ -337,7 +337,7 @@
   },
   {
     "id": 29,
-    "ctuCode": "SCTU29",
+    "ctuCode": "SC-CTU29",
     "site": "Medical Research Council Clinical Trials Unit at UCL",
     "locationLabel": "London",
     "ukcrcRegistrationId": "19",
@@ -349,7 +349,7 @@
   },
   {
     "id": 30,
-    "ctuCode": "SCTU30",
+    "ctuCode": "SC-CTU30",
     "site": "Newcastle Clinical Trials Unit (NCTU)",
     "locationLabel": "Newcastle upon Tyne",
     "ukcrcRegistrationId": "22",
@@ -361,7 +361,7 @@
   },
   {
     "id": 31,
-    "ctuCode": "SCTU31",
+    "ctuCode": "SC-CTU31",
     "site": "NHS Blood and Transplant Clinical Trials Unit",
     "locationLabel": "Bristol",
     "ukcrcRegistrationId": "57",
@@ -373,7 +373,7 @@
   },
   {
     "id": 32,
-    "ctuCode": "SCTU32",
+    "ctuCode": "SC-CTU32",
     "site": "North Wales Organisation for Randomised Trials in Health (NWORTH)",
     "locationLabel": "Bangor",
     "ukcrcRegistrationId": "23",
@@ -385,7 +385,7 @@
   },
   {
     "id": 33,
-    "ctuCode": "SCTU33",
+    "ctuCode": "SC-CTU33",
     "site": "Northern Ireland Clinical Trials Unit",
     "locationLabel": "Belfast",
     "ukcrcRegistrationId": "25",
@@ -397,7 +397,7 @@
   },
   {
     "id": 34,
-    "ctuCode": "SCTU34",
+    "ctuCode": "SC-CTU34",
     "site": "Norwich Clinical Trials Unit",
     "locationLabel": "Norwich",
     "ukcrcRegistrationId": "51",
@@ -409,7 +409,7 @@
   },
   {
     "id": 35,
-    "ctuCode": "SCTU35",
+    "ctuCode": "SC-CTU35",
     "site": "Nottingham Clinical Trials Unit",
     "locationLabel": "Nottingham",
     "ukcrcRegistrationId": "26",
@@ -421,7 +421,7 @@
   },
   {
     "id": 36,
-    "ctuCode": "SCTU36",
+    "ctuCode": "SC-CTU36",
     "site": "NPEU Clinical Trials Unit",
     "locationLabel": "Oxford",
     "ukcrcRegistrationId": "21",
@@ -433,7 +433,7 @@
   },
   {
     "id": 37,
-    "ctuCode": "SCTU37",
+    "ctuCode": "SC-CTU37",
     "site": "Oxford Clinical Trial Service Unit and Epidemiological Studies Unit (CTSU)",
     "locationLabel": "Oxford",
     "ukcrcRegistrationId": "46",
@@ -445,7 +445,7 @@
   },
   {
     "id": 38,
-    "ctuCode": "SCTU38",
+    "ctuCode": "SC-CTU38",
     "site": "Oxford Clinical Trials Research Unit (OCTRU)",
     "locationLabel": "Oxford",
     "ukcrcRegistrationId": "27",
@@ -457,7 +457,7 @@
   },
   {
     "id": 39,
-    "ctuCode": "SCTU39",
+    "ctuCode": "SC-CTU39",
     "site": "Oxford Primary Care and Vaccines Collaborative Clinical Trials Unit",
     "locationLabel": "Oxford",
     "ukcrcRegistrationId": "52",
@@ -469,7 +469,7 @@
   },
   {
     "id": 40,
-    "ctuCode": "SCTU40",
+    "ctuCode": "SC-CTU40",
     "site": "Papworth Trials Unit Collaboration",
     "locationLabel": "Cambridge",
     "ukcrcRegistrationId": "60",
@@ -481,7 +481,7 @@
   },
   {
     "id": 41,
-    "ctuCode": "SCTU41",
+    "ctuCode": "SC-CTU41",
     "site": "Peninsula Clinical Trials Unit",
     "locationLabel": "Plymouth",
     "ukcrcRegistrationId": "31",
@@ -493,7 +493,7 @@
   },
   {
     "id": 42,
-    "ctuCode": "SCTU42",
+    "ctuCode": "SC-CTU42",
     "site": "PRIMENT Clinical Trials Unit at UCL",
     "locationLabel": "London",
     "ukcrcRegistrationId": "20",
@@ -505,7 +505,7 @@
   },
   {
     "id": 43,
-    "ctuCode": "SCTU43",
+    "ctuCode": "SC-CTU43",
     "site": "Royal Marsden Clinical Trials Unit (RM-CTU)",
     "locationLabel": "London",
     "ukcrcRegistrationId": "62",
@@ -517,7 +517,7 @@
   },
   {
     "id": 44,
-    "ctuCode": "SCTU44",
+    "ctuCode": "SC-CTU44",
     "site": "Sheffield Clinical Trials Research Unit",
     "locationLabel": "Sheffield",
     "ukcrcRegistrationId": "34",
@@ -529,7 +529,7 @@
   },
   {
     "id": 45,
-    "ctuCode": "SCTU45",
+    "ctuCode": "SC-CTU45",
     "site": "Southampton Clinical Trials Unit",
     "locationLabel": "Southampton",
     "ukcrcRegistrationId": "37",
@@ -541,7 +541,7 @@
   },
   {
     "id": 46,
-    "ctuCode": "SCTU46",
+    "ctuCode": "SC-CTU46",
     "site": "Swansea Trials Unit",
     "locationLabel": "Swansea",
     "ukcrcRegistrationId": "58",
@@ -553,7 +553,7 @@
   },
   {
     "id": 47,
-    "ctuCode": "SCTU47",
+    "ctuCode": "SC-CTU47",
     "site": "Tayside Clinical Trials Unit",
     "locationLabel": "Dundee",
     "ukcrcRegistrationId": "49",
@@ -565,7 +565,7 @@
   },
   {
     "id": 48,
-    "ctuCode": "SCTU48",
+    "ctuCode": "SC-CTU48",
     "site": "The Institute of Cancer Research Clinical Trials and Statistics Unit (ICR-CTSU)",
     "locationLabel": "London",
     "ukcrcRegistrationId": "17",
@@ -577,7 +577,7 @@
   },
   {
     "id": 49,
-    "ctuCode": "SCTU49",
+    "ctuCode": "SC-CTU49",
     "site": "Warwick Clinical Trials Unit",
     "locationLabel": "Coventry",
     "ukcrcRegistrationId": "39",
@@ -589,7 +589,7 @@
   },
   {
     "id": 50,
-    "ctuCode": "SCTU50",
+    "ctuCode": "SC-CTU50",
     "site": "York Trials Unit",
     "locationLabel": "York",
     "ukcrcRegistrationId": "40",
