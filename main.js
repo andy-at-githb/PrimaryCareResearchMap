@@ -1,7 +1,8 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const NHS_GP_SEARCH = 'https://www.nhs.uk/service-search/find-a-gp/';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const APP_ASSET_VERSION = '2026-05-01b';
+const APP_ASSET_VERSION = '2026-05-05d';
+const APP_RELEASE_MONTH = 'May 2026';
 const CLEAN_MAP_ASSET_URL = `./assets/UK_CRDC_Map_clean.png?v=${APP_ASSET_VERSION}`;
 const MAP_RECT = { x: 875, y: 76, w: 635, h: 910 };
 const MAP_UNDERLAY_SHIFT_X = 26;
@@ -13,6 +14,7 @@ const DIAGRAM_LINKS = {
   nihrHealthTechHubs: 'https://www.nihr.ac.uk/support-and-services/industry/explore/healthtech-research-centres',
   rdn: 'https://rdn.nihr.ac.uk/',
   researchReady: 'https://www.rcgp.org.uk/representing-you/research-at-rcgp/research-ready',
+  sapc: 'https://sapc.ac.uk/',
   opc: 'https://www.optimumpatientcare.org',
   medicys: 'https://medicysltd.co.uk',
 };
@@ -27,7 +29,7 @@ let activeResolveRequestId = 0;
 
 const state = {
   inputPracticeName: '',
-  practiceLabel: 'Research Active GP Practice 1',
+  practiceLabel: '',
   verifiedPracticeName: null,
   verifiedPracticePostcode: null,
   verifiedPracticeUrl: null,
@@ -88,6 +90,11 @@ const summaryCtuDistance = document.querySelector('#summary-ctu-distance');
 const summaryScCtuHub = document.querySelector('#summary-sc-ctu-hub');
 const summaryScCtuDistance = document.querySelector('#summary-sc-ctu-distance');
 const summarySource = document.querySelector('#summary-source');
+const footerAttribution = document.querySelector('#footer-attribution');
+
+if (footerAttribution) {
+  footerAttribution.textContent = `Dr A Fairbairn Oxford University PC-CTU ${APP_RELEASE_MONTH}`;
+}
 
 function createSvgEl(tag, attrs = {}) {
   const el = document.createElementNS(SVG_NS, tag);
@@ -478,7 +485,7 @@ function renderVerificationSummary() {
   const secondaryCareCtu = secondaryCareCtuById(state.activeSecondaryCareCtuId);
   const dataset = state.datasetStatus?.dataset;
 
-  setFieldText(summaryEntered, state.inputPracticeName || state.practiceLabel, 'Not verified yet');
+  setFieldText(summaryEntered, state.inputPracticeName || state.verifiedPracticeName, 'Not verified yet');
   setFieldText(summaryVerified, state.verifiedPracticeName, 'Not verified yet');
   setFieldText(summaryCode, state.verifiedPracticeCode, 'Not verified yet');
   setFieldText(summaryPostcode, state.verifiedPracticePostcode || state.activePostcode, 'Not verified yet');
@@ -769,7 +776,7 @@ function drawDiagram() {
   const scCtuNode = { x: 850, y: 850, w: 270, h: 106 };
   const industry = { x: 520, y: 152, w: 304, h: 92 };
   const mhra = { x: 210, y: 250, w: 236, h: 88 };
-  const universities = { x: 850, y: 252, w: 250, h: 122 };
+  const universities = { x: 850, y: 252, w: 250, h: 148 };
   const rcgp = { x: 205, y: 430, w: 220, h: 106 };
   const thirdParty = { x: 190, y: 600, w: 320, h: 126 };
   const nihr = { x: 520, y: 872, w: 304, h: 176 };
@@ -924,11 +931,11 @@ function drawDiagram() {
 
   drawCircle(nodeLayer, { cx: center.x, cy: center.y, r: 168, fill: '#e5e5e5', stroke: '#e5e5e5', sw: 1 });
   drawCircle(nodeLayer, { cx: center.x, cy: center.y, r: 112, fill: '#ffffff', stroke: '#151515', sw: 3 });
-  drawText(nodeLayer, { x: center.x, y: center.y - 8, lines: ['Research Active', 'GP Practice 1'], size: 24, weight: 700 });
+  drawText(nodeLayer, { x: center.x, y: center.y - 8, lines: ['GP Practice'], size: 24, weight: 700 });
   drawText(nodeLayer, {
     x: center.x,
-    y: center.y + 70,
-    lines: wrap(state.verifiedPracticeName || state.practiceLabel || 'Research Active GP Practice 1', 22).slice(0, 3),
+    y: center.y + 60,
+    lines: wrap(state.verifiedPracticeName || state.practiceLabel || 'Awaiting verification', 22).slice(0, 3),
     size: 15,
     color: '#1f56cc',
   });
@@ -997,7 +1004,7 @@ function drawDiagram() {
   });
   drawText(nodeLayer, {
     x: universities.x,
-    y: universities.y - 18,
+    y: universities.y - 26,
     lines: ['Nearest Primary Care', 'University Department'],
     size: 18,
     weight: 700,
@@ -1005,15 +1012,7 @@ function drawDiagram() {
   if (activeAcademicInstitution) {
     drawText(nodeLayer, {
       x: universities.x,
-      y: universities.y + 12,
-      lines: [activeAcademicInstitution.institutionCode],
-      size: 18,
-      weight: 700,
-      color: '#1f56cc',
-    });
-    drawText(nodeLayer, {
-      x: universities.x,
-      y: universities.y + 42,
+      y: universities.y + 18,
       lines: wrap(activeAcademicInstitution.site, 22).slice(0, 3),
       size: 12.5,
       color: '#1f56cc',
@@ -1028,6 +1027,15 @@ function drawDiagram() {
       color: '#5c5d57',
     });
   }
+  drawText(nodeLayer, {
+    x: universities.x,
+    y: universities.y + 62,
+    lines: ['SAPC'],
+    size: 12.5,
+    weight: 700,
+    color: '#1f56cc',
+    href: DIAGRAM_LINKS.sapc,
+  });
 
   drawRect(nodeLayer, {
     x: pcHubNode.x - pcHubNode.w / 2,
@@ -1041,12 +1049,11 @@ function drawDiagram() {
   });
   drawText(nodeLayer, { x: pcHubNode.x, y: pcHubNode.y - 20, lines: ['Nearest PC-CRDC'], size: 18, weight: 700 });
   if (activePcHub) {
-    drawText(nodeLayer, { x: pcHubNode.x, y: pcHubNode.y + 2, lines: [activePcHub.hubName], size: 16, weight: 700, color: '#1f56cc' });
     drawText(nodeLayer, {
       x: pcHubNode.x,
-      y: pcHubNode.y + 28,
-      lines: wrap(activePcHub.site, 24).slice(0, 2),
-      size: 12.5,
+      y: pcHubNode.y + 16,
+      lines: wrap(activePcHub.site, 24).slice(0, 3),
+      size: 13,
       color: '#1f56cc',
       href: activePcHub.url,
     });
@@ -1066,12 +1073,11 @@ function drawDiagram() {
   });
   drawText(nodeLayer, { x: scHubNode.x, y: scHubNode.y - 20, lines: ['Nearest SC-CRDC'], size: 18, weight: 700 });
   if (activeScHub) {
-    drawText(nodeLayer, { x: scHubNode.x, y: scHubNode.y + 2, lines: [activeScHub.hubName], size: 16, weight: 700, color: '#1f56cc' });
     drawText(nodeLayer, {
       x: scHubNode.x,
-      y: scHubNode.y + 28,
+      y: scHubNode.y + 16,
       lines: wrap(activeScHub.site, 22).slice(0, 3),
-      size: 12.5,
+      size: 13,
       color: '#1f56cc',
       href: activeScHub.url || null,
     });
@@ -1099,17 +1105,9 @@ function drawDiagram() {
   if (activeSecondaryCareCtu) {
     drawText(nodeLayer, {
       x: scCtuNode.x,
-      y: scCtuNode.y + 2,
-      lines: [activeSecondaryCareCtu.ctuCode],
-      size: 16,
-      weight: 700,
-      color: '#1f56cc',
-    });
-    drawText(nodeLayer, {
-      x: scCtuNode.x,
-      y: scCtuNode.y + 28,
+      y: scCtuNode.y + 16,
       lines: wrap(activeSecondaryCareCtu.site, 22).slice(0, 3),
-      size: 11.5,
+      size: 12.5,
       color: '#1f56cc',
       href: activeSecondaryCareCtu.url || null,
     });
@@ -1143,16 +1141,8 @@ function drawDiagram() {
   if (activePrimaryCareCtu) {
     drawText(nodeLayer, {
       x: pcCtuNode.x,
-      y: pcCtuNode.y + 2,
-      lines: [activePrimaryCareCtu.ctuCode],
-      size: 16,
-      weight: 700,
-      color: '#1f56cc',
-    });
-    drawText(nodeLayer, {
-      x: pcCtuNode.x,
-      y: pcCtuNode.y + 28,
-      lines: wrap(activePrimaryCareCtu.site, 24).slice(0, 2),
+      y: pcCtuNode.y + 16,
+      lines: wrap(activePrimaryCareCtu.site, 24).slice(0, 3),
       size: 12.5,
       color: '#1f56cc',
       href: activePrimaryCareCtu.url || null,
@@ -1289,7 +1279,7 @@ practiceInput.addEventListener('input', (event) => {
     clearHoveredMapRecord();
     state.selectedPracticeCode = null;
     state.inputPracticeName = '';
-    state.practiceLabel = 'Research Active GP Practice 1';
+    state.practiceLabel = '';
     postcodeInput.value = '';
     nhsLink.href = NHS_GP_SEARCH;
     hidePracticeMatchPanel();
@@ -1305,7 +1295,7 @@ practiceInput.addEventListener('input', (event) => {
   }
   state.selectedPracticeCode = null;
   state.inputPracticeName = event.target.value.trim();
-  state.practiceLabel = state.inputPracticeName || 'Research Active GP Practice 1';
+  state.practiceLabel = state.inputPracticeName || '';
   hidePracticeMatchPanel();
   syncLegend();
   syncStatus();
@@ -1325,7 +1315,7 @@ practiceMatchOptions.addEventListener('click', (event) => {
   state.selectedPracticeCode = button.dataset.practiceCode || null;
   practiceInput.value = button.dataset.practiceName || '';
   state.inputPracticeName = practiceInput.value.trim();
-  state.practiceLabel = state.inputPracticeName || 'Research Active GP Practice 1';
+  state.practiceLabel = state.inputPracticeName || '';
   hidePracticeMatchPanel();
   resolvePractice();
 });
