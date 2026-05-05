@@ -8,18 +8,18 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="PC Research" />
-    <link rel="manifest" href="./site.webmanifest?v=2026-05-05d" />
-    <link rel="icon" type="image/svg+xml" href="./assets/app-icon.svg?v=2026-05-05d" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./assets/app-icon-32.png?v=2026-05-05d" />
-    <link rel="icon" type="image/png" sizes="192x192" href="./assets/app-icon-192.png?v=2026-05-05d" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./assets/app-icon-180.png?v=2026-05-05d" />
-    <link rel="stylesheet" href="./styles.css?v=2026-05-05d" />
+    <link rel="manifest" href="./site.webmanifest?v=2026-05-05g" />
+    <link rel="icon" type="image/svg+xml" href="./assets/app-icon.svg?v=2026-05-05g" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/app-icon-32.png?v=2026-05-05g" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/app-icon-192.png?v=2026-05-05g" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/app-icon-180.png?v=2026-05-05g" />
+    <link rel="stylesheet" href="./styles.css?v=2026-05-05g" />
   </head>
   <body>
     <div class="page-shell">
       <header class="page-header">
         <div>
-          <p class="section-title">PRIMARY CARE COMMERCIAL RESEARCH EXPLORER - England (Dev) <span class="app-version">v.3.8</span></p>
+          <p class="section-title">PRIMARY CARE COMMERCIAL RESEARCH EXPLORER - England (Dev) <span class="app-version">v.3.11</span></p>
           <p class="intro">
             Enter a GP practice name to verify it against the current NHS England Digital GP-practice mapping snapshot,
             extract its postcode, and map it to the nearest Primary Care - Commercial Research Delivery Centre (PC-CRDC)
@@ -141,6 +141,12 @@
             <g id="diagram-lines"></g>
             <g id="diagram-nodes"></g>
           </svg>
+          <aside id="industry-popup" class="hover-popup" hidden>
+            <p class="hover-popup-title">Industry/Pharma organisations</p>
+            <ul id="industry-popup-list" class="hover-popup-list">
+              <li>Loading organisations…</li>
+            </ul>
+          </aside>
         </section>
 
         <aside class="legend-panel">
@@ -150,6 +156,10 @@
               <p>
                 The verified nearest PC-CRDC and nearest SC-CRDC are highlighted in the diagram and in these lists. Blue text indicates linked practice or centre details.
               </p>
+              <label class="directory-filter">
+                <span>Filter directory</span>
+                <input id="directory-filter-input" type="search" placeholder="Filter names and locations" autocomplete="off" />
+              </label>
             </div>
             <p class="legend-subhead">Primary Care Commercial Research Delivery Centers - PC-CRDCs</p>
             <ol id="pc-hub-legend" class="hub-legend"></ol>
@@ -161,6 +171,7 @@
             <ol id="ctu-legend" class="hub-legend hub-legend-compact"></ol>
             <p class="legend-subhead">Specialist/Secondary Care Clinical Trials Units - SC-CTUs</p>
             <ol id="sc-ctu-legend" class="hub-legend hub-legend-compact"></ol>
+            <p id="directory-filter-empty" class="legend-empty" hidden>No directory entries match this filter.</p>
           </div>
         </aside>
       </main>
@@ -170,6 +181,6 @@
       </footer>
     </div>
 
-    <script type="module" src="./main.js?v=2026-05-05d"></script>
+    <script type="module" src="./main.js?v=2026-05-05g"></script>
   </body>
 </html>

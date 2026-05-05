@@ -1,0 +1,40 @@
+{
+  "organisations": [
+    {
+      "name": "AstraZeneca",
+      "url": "https://www.astrazeneca.co.uk/"
+    },
+    {
+      "name": "Boehringer Ingelheim",
+      "url": "https://www.boehringer-ingelheim.com/uk"
+    },
+    {
+      "name": "Bristol Myers Squibb",
+      "url": "https://www.bms.com/gb"
+    },
+    {
+      "name": "GlaxoSmithKline / GSK",
+      "url": "https://www.gsk.com/en-gb/"
+    },
+    {
+      "name": "Moderna",
+      "url": "https://www.modernatx.com/en-GB"
+    },
+    {
+      "name": "Novartis",
+      "url": "https://www.novartis.com/uk-en"
+    },
+    {
+      "name": "Novo Nordisk",
+      "url": "https://www.novonordisk.co.uk/"
+    },
+    {
+      "name": "Pfizer",
+      "url": "https://www.pfizer.co.uk/"
+    },
+    {
+      "name": "Sanofi",
+      "url": "https://www.sanofi.com/en"
+    }
+  ]
+}

@@ -38,12 +38,22 @@ async function run() {
   assert(homepage.response.ok, 'Homepage failed to load');
   assert(homepage.response.headers.get('content-security-policy')?.includes("default-src 'self'"), 'Homepage missing expected CSP header');
   assert(homepage.response.headers.get('x-content-type-options') === 'nosniff', 'Homepage missing nosniff header');
+  assert(homepage.body.includes('directory-filter-input'), 'Homepage missing directory filter UI');
+  assert(homepage.body.includes('industry-popup'), 'Homepage missing industry popup UI');
   checks.push('security-headers');
 
   const manifest = await requestJson('/site.webmanifest');
   assert(manifest.response.ok, 'Manifest failed to load');
   assert(manifest.payload?.icons?.length >= 2, 'Manifest icons look incomplete');
   checks.push('webmanifest');
+
+  const industryOrganisations = await requestJson('/industry-pharma-organisations.json');
+  assert(industryOrganisations.response.ok, 'Industry organisation list failed to load');
+  assert(Array.isArray(industryOrganisations.payload?.organisations), 'Industry organisation list payload is malformed');
+  assert(industryOrganisations.payload.organisations.length >= 5, 'Industry organisation list looks incomplete');
+  const sanofi = industryOrganisations.payload.organisations.find((organisation) => organisation.name === 'Sanofi');
+  assert(sanofi?.url === 'https://www.sanofi.com/en', 'Sanofi organisation link is incorrect');
+  checks.push('industry-organisations');
 
   const seeded = await requestJson('/api/seeded-practices');
   assert(seeded.response.ok, 'Seeded practices endpoint failed');

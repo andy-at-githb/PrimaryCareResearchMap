@@ -1,12 +1,15 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const NHS_GP_SEARCH = 'https://www.nhs.uk/service-search/find-a-gp/';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const APP_ASSET_VERSION = '2026-05-05d';
+const APP_ASSET_VERSION = '2026-05-05g';
 const APP_RELEASE_MONTH = 'May 2026';
 const CLEAN_MAP_ASSET_URL = `./assets/UK_CRDC_Map_clean.png?v=${APP_ASSET_VERSION}`;
+const INDUSTRY_ORGANISATIONS_URL = `./industry-pharma-organisations.json?v=${APP_ASSET_VERSION}`;
+const SVG_VIEWBOX = { width: 1600, height: 1040 };
 const MAP_RECT = { x: 875, y: 76, w: 635, h: 910 };
 const MAP_UNDERLAY_SHIFT_X = 26;
 const UK_GEO_BOUNDS = { west: -8.8, east: 2.1, north: 59.4, south: 49.6 };
+const INDUSTRY_NODE = { x: 520, y: 152, w: 304, h: 92 };
 
 const DIAGRAM_LINKS = {
   cprd: 'https://www.cprd.com/',
@@ -24,8 +27,11 @@ let scHubRecords = [];
 let academicInstitutionRecords = [];
 let primaryCareCtuRecords = [];
 let secondaryCareCtuRecords = [];
+let industryOrganisationRecords = [];
 let centreRecordsPromise = null;
+let industryOrganisationsPromise = null;
 let activeResolveRequestId = 0;
+let industryPopupHideTimer = null;
 
 const state = {
   inputPracticeName: '',
@@ -50,6 +56,7 @@ const state = {
   verificationSource: null,
   datasetStatus: null,
   selectedPracticeCode: null,
+  directoryFilterQuery: '',
 };
 
 const practiceInput = document.querySelector('#practice-input');
@@ -65,15 +72,20 @@ const scLegend = document.querySelector('#sc-hub-legend');
 const universityLegend = document.querySelector('#university-legend');
 const ctuLegend = document.querySelector('#ctu-legend');
 const scCtuLegend = document.querySelector('#sc-ctu-legend');
+const directoryFilterInput = document.querySelector('#directory-filter-input');
+const directoryFilterEmpty = document.querySelector('#directory-filter-empty');
 const practiceMatchPanel = document.querySelector('#practice-match-panel');
 const practiceMatchTitle = document.querySelector('#practice-match-title');
 const practiceMatchMessage = document.querySelector('#practice-match-message');
 const practiceMatchOptions = document.querySelector('#practice-match-options');
+const diagram = document.querySelector('#diagram');
 const diagramPanel = document.querySelector('.diagram-panel');
 const legendPanel = document.querySelector('.legend-panel');
 const underlayLayer = document.querySelector('#diagram-underlay');
 const lineLayer = document.querySelector('#diagram-lines');
 const nodeLayer = document.querySelector('#diagram-nodes');
+const industryPopup = document.querySelector('#industry-popup');
+const industryPopupList = document.querySelector('#industry-popup-list');
 
 const summaryEntered = document.querySelector('#summary-entered');
 const summaryVerified = document.querySelector('#summary-verified');
@@ -94,6 +106,15 @@ const footerAttribution = document.querySelector('#footer-attribution');
 
 if (footerAttribution) {
   footerAttribution.textContent = `Dr A Fairbairn Oxford University PC-CTU ${APP_RELEASE_MONTH}`;
+}
+
+if (industryPopup) {
+  industryPopup.addEventListener('pointerenter', () => {
+    clearIndustryPopupHideTimer();
+  });
+  industryPopup.addEventListener('pointerleave', () => {
+    scheduleIndustryPopupHide();
+  });
 }
 
 function createSvgEl(tag, attrs = {}) {
@@ -123,8 +144,157 @@ function syncLegendPanelHeight() {
   }
 }
 
+function clearIndustryPopupHideTimer() {
+  if (industryPopupHideTimer) {
+    window.clearTimeout(industryPopupHideTimer);
+    industryPopupHideTimer = null;
+  }
+}
+
+function hideIndustryPopup({ immediate = false } = {}) {
+  clearIndustryPopupHideTimer();
+  if (!industryPopup) return;
+  if (immediate) {
+    industryPopup.hidden = true;
+    return;
+  }
+  industryPopup.hidden = true;
+}
+
+function scheduleIndustryPopupHide() {
+  clearIndustryPopupHideTimer();
+  industryPopupHideTimer = window.setTimeout(() => {
+    hideIndustryPopup({ immediate: true });
+  }, 120);
+}
+
 function clearChildren(node) {
   while (node.firstChild) node.removeChild(node.firstChild);
+}
+
+function renderIndustryPopupList(records, fallbackMessage = 'Loading organisations…') {
+  if (!industryPopupList) return;
+  clearChildren(industryPopupList);
+  if (!records?.length) {
+    const item = document.createElement('li');
+    item.textContent = fallbackMessage;
+    industryPopupList.appendChild(item);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  records.forEach((record) => {
+    const item = document.createElement('li');
+    const link = createExternalLink(record.name, record.url, 'hub-link');
+    if (link) {
+      item.appendChild(link);
+    } else {
+      item.textContent = record.name;
+    }
+    fragment.appendChild(item);
+  });
+  industryPopupList.appendChild(fragment);
+}
+
+async function loadIndustryOrganisations() {
+  if (industryOrganisationRecords.length) {
+    return industryOrganisationRecords;
+  }
+  if (industryOrganisationsPromise) {
+    return industryOrganisationsPromise;
+  }
+
+  industryOrganisationsPromise = fetch(INDUSTRY_ORGANISATIONS_URL)
+    .then(async (response) => {
+      const payload = await response.json();
+      if (!response.ok || !Array.isArray(payload.organisations)) {
+        throw new Error('Industry organisation list unavailable');
+      }
+
+      industryOrganisationRecords = payload.organisations
+        .map((record) => ({
+          name: String(record.name || '').trim(),
+          url: toSafeHttpUrl(record.url),
+        }))
+        .filter((record) => record.name)
+        .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
+
+      renderIndustryPopupList(industryOrganisationRecords, 'No organisations available.');
+      if (industryPopup && !industryPopup.hidden) {
+        requestAnimationFrame(() => {
+          positionIndustryPopup();
+        });
+      }
+      return industryOrganisationRecords;
+    })
+    .catch((error) => {
+      industryOrganisationsPromise = null;
+      renderIndustryPopupList([], 'Organisation list unavailable.');
+      if (industryPopup && !industryPopup.hidden) {
+        requestAnimationFrame(() => {
+          positionIndustryPopup();
+        });
+      }
+      throw error;
+    });
+
+  return industryOrganisationsPromise;
+}
+
+function positionIndustryPopup(node = INDUSTRY_NODE) {
+  if (!industryPopup || industryPopup.hidden || !diagramPanel || !diagram) return;
+
+  const panelRect = diagramPanel.getBoundingClientRect();
+  const svgRect = diagram.getBoundingClientRect();
+  const popupRect = industryPopup.getBoundingClientRect();
+  const scaleX = svgRect.width / SVG_VIEWBOX.width;
+  const scaleY = svgRect.height / SVG_VIEWBOX.height;
+  const insetLeft = svgRect.left - panelRect.left;
+  const insetTop = svgRect.top - panelRect.top;
+  const anchorCenterX = insetLeft + node.x * scaleX;
+  const anchorBelowY = insetTop + (node.y + node.h / 2) * scaleY;
+  const anchorAboveY = insetTop + (node.y - node.h / 2) * scaleY;
+  const padding = 14;
+
+  let left = anchorCenterX - popupRect.width / 2;
+  left = Math.max(padding, Math.min(left, panelRect.width - popupRect.width - padding));
+
+  let top = anchorBelowY + 14;
+  if (top + popupRect.height > panelRect.height - padding) {
+    top = anchorAboveY - popupRect.height - 14;
+  }
+  top = Math.max(padding, top);
+
+  industryPopup.style.left = `${Math.round(left)}px`;
+  industryPopup.style.top = `${Math.round(top)}px`;
+}
+
+function showIndustryPopup() {
+  if (!industryPopup) return;
+  clearIndustryPopupHideTimer();
+  industryPopup.hidden = false;
+  if (!industryOrganisationRecords.length && !industryOrganisationsPromise) {
+    renderIndustryPopupList([], 'Loading organisations…');
+    loadIndustryOrganisations().catch(() => {});
+  }
+  requestAnimationFrame(() => {
+    positionIndustryPopup();
+  });
+}
+
+function resultBoxStyle(isActive) {
+  if (isActive) {
+    return {
+      fill: 'rgba(232, 239, 255, 0.98)',
+      stroke: '#1f56cc',
+      sw: 3.1,
+    };
+  }
+  return {
+    fill: 'rgba(244, 247, 255, 0.96)',
+    stroke: '#7b8db5',
+    sw: 2.2,
+  };
 }
 
 function drawRect(group, { x, y, w, h, rx = 24, fill = 'rgba(255,255,255,0.92)', stroke = '#151515', sw = 3 }) {
@@ -162,6 +332,14 @@ function drawText(group, { x, y, lines, size = 30, color = '#121212', anchor = '
     parent.appendChild(text);
   });
   if (safeHref) group.appendChild(parent);
+}
+
+function directoryFilterMatches(...values) {
+  const query = state.directoryFilterQuery.trim().toLowerCase();
+  if (!query) return true;
+  return values
+    .filter(Boolean)
+    .some((value) => String(value).toLowerCase().includes(query));
 }
 
 function wrap(text, width = 24) {
@@ -425,6 +603,24 @@ function setNodeChildren(node, ...children) {
   children.filter(Boolean).forEach((child) => node.appendChild(child));
 }
 
+function createLegendItem({ type, id, indexLabel, label, href = null, isActive = false }) {
+  if (!directoryFilterMatches(indexLabel, label)) {
+    return null;
+  }
+
+  const li = document.createElement('li');
+  if (isActive) li.classList.add('is-active');
+  bindLegendHover(li, type, id);
+
+  const index = document.createElement('span');
+  index.className = 'hub-index';
+  index.textContent = indexLabel;
+  li.appendChild(index);
+
+  li.appendChild(href ? createExternalLink(label, href, 'hub-link') : document.createTextNode(label));
+  return li;
+}
+
 function clearVerificationState() {
   state.verifiedPracticeName = null;
   state.verifiedPracticePostcode = null;
@@ -626,75 +822,90 @@ function syncLegend() {
   clearChildren(universityLegend);
   clearChildren(ctuLegend);
   clearChildren(scCtuLegend);
+  let totalMatches = 0;
   const pcFragment = document.createDocumentFragment();
   pcHubRecords.forEach((hub) => {
-    const li = document.createElement('li');
-    if (state.activePcHubId === hub.id) li.classList.add('is-active');
-    bindLegendHover(li, 'pc', hub.id);
-    const index = document.createElement('span');
-    index.className = 'hub-index';
-    index.textContent = `PC ${hub.id}`;
-    li.appendChild(index);
-    li.appendChild(createExternalLink(hub.site, hub.url, 'hub-link'));
+    const li = createLegendItem({
+      type: 'pc',
+      id: hub.id,
+      indexLabel: `PC ${hub.id}`,
+      label: hub.site,
+      href: hub.url,
+      isActive: state.activePcHubId === hub.id,
+    });
+    if (!li) return;
+    totalMatches += 1;
     pcFragment.appendChild(li);
   });
   pcLegend.appendChild(pcFragment);
 
   const scFragment = document.createDocumentFragment();
   scHubRecords.forEach((hub) => {
-    const li = document.createElement('li');
-    if (state.activeScHubId === hub.id) li.classList.add('is-active');
-    bindLegendHover(li, 'sc', hub.id);
-    const index = document.createElement('span');
-    index.className = 'hub-index';
-    index.textContent = `SC ${hub.id}`;
-    li.appendChild(index);
-    li.appendChild(hub.url ? createExternalLink(hub.site, hub.url, 'hub-link') : document.createTextNode(hub.site));
+    const li = createLegendItem({
+      type: 'sc',
+      id: hub.id,
+      indexLabel: `SC ${hub.id}`,
+      label: hub.site,
+      href: hub.url || null,
+      isActive: state.activeScHubId === hub.id,
+    });
+    if (!li) return;
+    totalMatches += 1;
     scFragment.appendChild(li);
   });
   scLegend.appendChild(scFragment);
 
   const universityFragment = document.createDocumentFragment();
   academicInstitutionRecords.forEach((institution) => {
-    const li = document.createElement('li');
-    if (state.activeAcademicInstitutionId === institution.id) li.classList.add('is-active');
-    bindLegendHover(li, 'university', institution.id);
-    const index = document.createElement('span');
-    index.className = 'hub-index';
-    index.textContent = institution.institutionCode.replace(/(\D)(\d+)/, '$1 $2');
-    li.appendChild(index);
-    li.appendChild(institution.url ? createExternalLink(institution.site, institution.url, 'hub-link') : document.createTextNode(institution.site));
+    const li = createLegendItem({
+      type: 'university',
+      id: institution.id,
+      indexLabel: institution.institutionCode.replace(/(\D)(\d+)/, '$1 $2'),
+      label: institution.site,
+      href: institution.url || null,
+      isActive: state.activeAcademicInstitutionId === institution.id,
+    });
+    if (!li) return;
+    totalMatches += 1;
     universityFragment.appendChild(li);
   });
   universityLegend.appendChild(universityFragment);
 
   const ctuFragment = document.createDocumentFragment();
   primaryCareCtuRecords.forEach((ctu) => {
-    const li = document.createElement('li');
-    if (state.activePrimaryCareCtuId === ctu.id) li.classList.add('is-active');
-    bindLegendHover(li, 'pc-ctu', ctu.id);
-    const index = document.createElement('span');
-    index.className = 'hub-index';
-    index.textContent = ctu.ctuCode.replace(/(\D)(\d+)/, '$1 $2');
-    li.appendChild(index);
-    li.appendChild(ctu.url ? createExternalLink(ctu.site, ctu.url, 'hub-link') : document.createTextNode(ctu.site));
+    const li = createLegendItem({
+      type: 'pc-ctu',
+      id: ctu.id,
+      indexLabel: ctu.ctuCode.replace(/(\D)(\d+)/, '$1 $2'),
+      label: ctu.site,
+      href: ctu.url || null,
+      isActive: state.activePrimaryCareCtuId === ctu.id,
+    });
+    if (!li) return;
+    totalMatches += 1;
     ctuFragment.appendChild(li);
   });
   ctuLegend.appendChild(ctuFragment);
 
   const scCtuFragment = document.createDocumentFragment();
   secondaryCareCtuRecords.forEach((ctu) => {
-    const li = document.createElement('li');
-    if (state.activeSecondaryCareCtuId === ctu.id) li.classList.add('is-active');
-    bindLegendHover(li, 'sc-ctu', ctu.id);
-    const index = document.createElement('span');
-    index.className = 'hub-index';
-    index.textContent = ctu.ctuCode.replace(/(\D)(\d+)/, '$1 $2');
-    li.appendChild(index);
-    li.appendChild(ctu.url ? createExternalLink(ctu.site, ctu.url, 'hub-link') : document.createTextNode(ctu.site));
+    const li = createLegendItem({
+      type: 'sc-ctu',
+      id: ctu.id,
+      indexLabel: ctu.ctuCode.replace(/(\D)(\d+)/, '$1 $2'),
+      label: ctu.site,
+      href: ctu.url || null,
+      isActive: state.activeSecondaryCareCtuId === ctu.id,
+    });
+    if (!li) return;
+    totalMatches += 1;
     scCtuFragment.appendChild(li);
   });
   scCtuLegend.appendChild(scCtuFragment);
+
+  if (directoryFilterEmpty) {
+    directoryFilterEmpty.hidden = !(state.directoryFilterQuery.trim() && totalMatches === 0);
+  }
 }
 
 function syncStatus(message = null) {
@@ -774,7 +985,7 @@ function drawDiagram() {
   const scHubNode = { x: 850, y: 560, w: 270, h: 106 };
   const pcCtuNode = { x: 850, y: 710, w: 270, h: 106 };
   const scCtuNode = { x: 850, y: 850, w: 270, h: 106 };
-  const industry = { x: 520, y: 152, w: 304, h: 92 };
+  const industry = INDUSTRY_NODE;
   const mhra = { x: 210, y: 250, w: 236, h: 88 };
   const universities = { x: 850, y: 252, w: 250, h: 148 };
   const rcgp = { x: 205, y: 430, w: 220, h: 106 };
@@ -803,6 +1014,11 @@ function drawDiagram() {
   const activeAcademicInstitution = academicInstitutionById(state.activeAcademicInstitutionId);
   const activePrimaryCareCtu = primaryCareCtuById(state.activePrimaryCareCtuId);
   const activeSecondaryCareCtu = secondaryCareCtuById(state.activeSecondaryCareCtuId);
+  const universityBoxStyle = resultBoxStyle(Boolean(activeAcademicInstitution));
+  const pcHubBoxStyle = resultBoxStyle(Boolean(activePcHub));
+  const scHubBoxStyle = resultBoxStyle(Boolean(activeScHub));
+  const pcCtuBoxStyle = resultBoxStyle(Boolean(activePrimaryCareCtu));
+  const scCtuBoxStyle = resultBoxStyle(Boolean(activeSecondaryCareCtu));
   underlayLayer.appendChild(createSvgEl('image', {
     x: MAP_RECT.x + MAP_UNDERLAY_SHIFT_X,
     y: MAP_RECT.y,
@@ -992,15 +1208,43 @@ function drawDiagram() {
     }
   });
 
+  const industryHoverTarget = createSvgEl('rect', {
+    x: industry.x - industry.w / 2,
+    y: industry.y - industry.h / 2,
+    width: industry.w,
+    height: industry.h,
+    rx: 18,
+    ry: 18,
+    fill: 'transparent',
+    'pointer-events': 'all',
+    tabindex: 0,
+    role: 'button',
+    'aria-label': 'Show industry and pharma organisations',
+  });
+  industryHoverTarget.style.cursor = 'pointer';
+  industryHoverTarget.addEventListener('pointerenter', () => {
+    showIndustryPopup();
+  });
+  industryHoverTarget.addEventListener('pointerleave', () => {
+    scheduleIndustryPopupHide();
+  });
+  industryHoverTarget.addEventListener('focus', () => {
+    showIndustryPopup();
+  });
+  industryHoverTarget.addEventListener('blur', () => {
+    hideIndustryPopup({ immediate: true });
+  });
+  nodeLayer.appendChild(industryHoverTarget);
+
   drawRect(nodeLayer, {
     x: universities.x - universities.w / 2,
     y: universities.y - universities.h / 2,
     w: universities.w,
     h: universities.h,
     rx: 18,
-    fill: 'rgba(255,255,255,0.96)',
-    stroke: activeAcademicInstitution ? '#1f56cc' : '#151515',
-    sw: activeAcademicInstitution ? 3.1 : 2.5,
+    fill: universityBoxStyle.fill,
+    stroke: universityBoxStyle.stroke,
+    sw: universityBoxStyle.sw,
   });
   drawText(nodeLayer, {
     x: universities.x,
@@ -1043,9 +1287,9 @@ function drawDiagram() {
     w: pcHubNode.w,
     h: pcHubNode.h,
     rx: 18,
-    fill: 'rgba(255,255,255,0.96)',
-    stroke: activePcHub ? '#1f56cc' : '#151515',
-    sw: activePcHub ? 3.1 : 2.5,
+    fill: pcHubBoxStyle.fill,
+    stroke: pcHubBoxStyle.stroke,
+    sw: pcHubBoxStyle.sw,
   });
   drawText(nodeLayer, { x: pcHubNode.x, y: pcHubNode.y - 20, lines: ['Nearest PC-CRDC'], size: 18, weight: 700 });
   if (activePcHub) {
@@ -1067,9 +1311,9 @@ function drawDiagram() {
     w: scHubNode.w,
     h: scHubNode.h,
     rx: 18,
-    fill: 'rgba(255,255,255,0.96)',
-    stroke: activeScHub ? '#1f56cc' : '#151515',
-    sw: activeScHub ? 3.1 : 2.5,
+    fill: scHubBoxStyle.fill,
+    stroke: scHubBoxStyle.stroke,
+    sw: scHubBoxStyle.sw,
   });
   drawText(nodeLayer, { x: scHubNode.x, y: scHubNode.y - 20, lines: ['Nearest SC-CRDC'], size: 18, weight: 700 });
   if (activeScHub) {
@@ -1091,9 +1335,9 @@ function drawDiagram() {
     w: scCtuNode.w,
     h: scCtuNode.h,
     rx: 18,
-    fill: 'rgba(255,255,255,0.96)',
-    stroke: activeSecondaryCareCtu ? '#1f56cc' : '#151515',
-    sw: activeSecondaryCareCtu ? 3.0 : 2.3,
+    fill: scCtuBoxStyle.fill,
+    stroke: scCtuBoxStyle.stroke,
+    sw: scCtuBoxStyle.sw,
   });
   drawText(nodeLayer, {
     x: scCtuNode.x,
@@ -1127,9 +1371,9 @@ function drawDiagram() {
     w: pcCtuNode.w,
     h: pcCtuNode.h,
     rx: 18,
-    fill: 'rgba(255,255,255,0.96)',
-    stroke: activePrimaryCareCtu ? '#1f56cc' : '#151515',
-    sw: activePrimaryCareCtu ? 3.0 : 2.3,
+    fill: pcCtuBoxStyle.fill,
+    stroke: pcCtuBoxStyle.stroke,
+    sw: pcCtuBoxStyle.sw,
   });
   drawText(nodeLayer, {
     x: pcCtuNode.x,
@@ -1355,15 +1599,22 @@ practiceInput.addEventListener('keydown', (event) => {
 postcodeInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') resolvePractice();
 });
+directoryFilterInput?.addEventListener('input', (event) => {
+  state.directoryFilterQuery = event.target.value.trim();
+  syncLegend();
+});
 
 renderVerificationSummary();
 renderDatasetStatus();
 syncLegend();
 drawDiagram();
 requestAnimationFrame(syncLegendPanelHeight);
-window.addEventListener('resize', syncLegendPanelHeight);
+window.addEventListener('resize', () => {
+  syncLegendPanelHeight();
+  positionIndustryPopup();
+});
 
-Promise.allSettled([loadSeededPracticeNames(), loadDatasetStatus()]).then((results) => {
+Promise.allSettled([loadSeededPracticeNames(), loadDatasetStatus(), loadIndustryOrganisations()]).then((results) => {
   const [practiceResult, datasetResult] = results;
   if (practiceResult.status === 'rejected') {
     syncStatus({ title: 'Practice list unavailable', detail: 'The app is still usable, but the known practice suggestions could not be loaded.' });

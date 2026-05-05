@@ -335,6 +335,7 @@ function buildResponseHeaders(contentType) {
 const PUBLIC_FILE_PATHS = new Map([
   ['/', path.join(ROOT, 'index.html')],
   ['/index.html', path.join(ROOT, 'index.html')],
+  ['/industry-pharma-organisations.json', path.join(ROOT, 'industry-pharma-organisations.json')],
   ['/site.webmanifest', path.join(ROOT, 'site.webmanifest')],
   ['/styles.css', path.join(ROOT, 'styles.css')],
   ['/main.js', path.join(ROOT, 'main.js')],
