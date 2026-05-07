@@ -8,18 +8,19 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="PC Research" />
-    <link rel="manifest" href="./site.webmanifest?v=2026-05-05i" />
-    <link rel="icon" type="image/svg+xml" href="./assets/app-icon.svg?v=2026-05-05i" />
-    <link rel="icon" type="image/png" sizes="32x32" href="./assets/app-icon-32.png?v=2026-05-05i" />
-    <link rel="icon" type="image/png" sizes="192x192" href="./assets/app-icon-192.png?v=2026-05-05i" />
-    <link rel="apple-touch-icon" sizes="180x180" href="./assets/app-icon-180.png?v=2026-05-05i" />
-    <link rel="stylesheet" href="./styles.css?v=2026-05-05i" />
+    <link rel="manifest" href="./site.webmanifest?v=2026-05-07c" />
+    <link rel="icon" type="image/svg+xml" href="./assets/app-icon.svg?v=2026-05-07c" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/app-icon-32.png?v=2026-05-07c" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/app-icon-192.png?v=2026-05-07c" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/app-icon-180.png?v=2026-05-07c" />
+    <link rel="stylesheet" href="./styles.css?v=2026-05-07c" />
   </head>
   <body>
     <div class="page-shell">
       <header class="page-header">
+        <p class="suggestion-prompt">This is a collaborative project, please send comments and/or suggestions to the developer by clicking <button id="open-suggestion-button" class="suggestion-button" type="button">here</button></p>
         <div>
-          <p class="section-title">PRIMARY CARE COMMERCIAL RESEARCH EXPLORER - England (Dev) <span class="app-version">v.3.12</span></p>
+          <p class="section-title">PRIMARY CARE COMMERCIAL RESEARCH EXPLORER - England (Dev) <span class="app-version">v.3.13</span></p>
           <p class="intro">
             Enter a GP practice name to verify it against the current NHS England Digital GP-practice mapping snapshot,
             extract its postcode, and map it to the nearest Primary Care - Commercial Research Delivery Centre (PC-CRDC)
@@ -181,6 +182,39 @@
       </footer>
     </div>
 
-    <script type="module" src="./main.js?v=2026-05-05i"></script>
+    <div id="suggestion-modal" class="suggestion-modal" hidden aria-hidden="true">
+      <div class="suggestion-modal-backdrop" data-suggestion-close></div>
+      <div class="suggestion-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="suggestion-title">
+        <button type="button" class="suggestion-close" data-suggestion-close aria-label="Close">×</button>
+        <h2 id="suggestion-title">Send suggestions to developer</h2>
+        <p class="suggestion-intro">Share an idea, bug report, or comment. Name and comment are required; email is optional and only used if a reply is needed.</p>
+        <form id="suggestion-form" class="suggestion-form" novalidate>
+          <label class="field">
+            <span>Name <span class="required-marker">*</span></span>
+            <input id="suggestion-name" name="name" type="text" maxlength="120" required autocomplete="name" />
+          </label>
+          <label class="field">
+            <span>Email (optional)</span>
+            <input id="suggestion-email" name="email" type="email" maxlength="160" autocomplete="email" />
+          </label>
+          <label class="field">
+            <span>Comment <span class="required-marker">*</span></span>
+            <textarea id="suggestion-comment" name="comment" rows="6" maxlength="4000" required></textarea>
+          </label>
+          <div class="suggestion-honeypot" aria-hidden="true">
+            <label>Website
+              <input id="suggestion-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </label>
+          </div>
+          <p id="suggestion-feedback" class="suggestion-feedback" role="status" aria-live="polite"></p>
+          <div class="suggestion-actions">
+            <button type="button" class="secondary-button" data-suggestion-close>Cancel</button>
+            <button id="suggestion-submit" type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="./main.js?v=2026-05-07c"></script>
   </body>
 </html>

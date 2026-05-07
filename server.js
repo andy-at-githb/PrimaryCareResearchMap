@@ -5,6 +5,7 @@ const { execFile } = require('child_process');
 const { promisify } = require('util');
 const { URL } = require('url');
 
+
 const execFileAsync = promisify(execFile);
 const fsp = fs.promises;
 
@@ -1127,6 +1128,154 @@ async function handleRefreshPracticeData(req, res) {
   });
 }
 
+const SUGGESTION_TO = process.env.SUGGESTION_TO || 'pcresearchexplorer@outlook.com';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const RESEND_FROM = process.env.RESEND_FROM || 'PC Research Explorer <onboarding@resend.dev>';
+const SUGGESTION_MIN_ELAPSED_MS = 3000;
+const SUGGESTION_RATE_WINDOW_MS = 60 * 1000;
+const SUGGESTION_RATE_MAX = 3;
+const SUGGESTION_MAX_NAME = 120;
+const SUGGESTION_MAX_EMAIL = 160;
+const SUGGESTION_MAX_COMMENT = 4000;
+const suggestionRateLog = new Map();
+
+function getClientIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  if (typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+function checkSuggestionRate(ip) {
+  const now = Date.now();
+  const log = suggestionRateLog.get(ip) || [];
+  const recent = log.filter((t) => now - t < SUGGESTION_RATE_WINDOW_MS);
+  if (recent.length >= SUGGESTION_RATE_MAX) return false;
+  recent.push(now);
+  suggestionRateLog.set(ip, recent);
+  if (suggestionRateLog.size > 1000) {
+    for (const [key, entries] of suggestionRateLog) {
+      if (!entries.length || now - entries[entries.length - 1] > SUGGESTION_RATE_WINDOW_MS * 5) {
+        suggestionRateLog.delete(key);
+      }
+    }
+  }
+  return true;
+}
+
+async function readJsonBody(req, maxBytes = 16 * 1024) {
+  return new Promise((resolve, reject) => {
+    let total = 0;
+    const chunks = [];
+    req.on('data', (chunk) => {
+      total += chunk.length;
+      if (total > maxBytes) {
+        reject(new Error('Request body too large'));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      const raw = Buffer.concat(chunks).toString('utf8');
+      if (!raw) { resolve({}); return; }
+      try { resolve(JSON.parse(raw)); }
+      catch (_) { reject(new Error('Invalid JSON body')); }
+    });
+    req.on('error', reject);
+  });
+}
+
+async function handleSuggestion(req, res) {
+  if (!isSameOriginRequest(req)) {
+    sendJson(res, 403, { error: 'Suggestion submissions are only allowed from the app origin' });
+    return;
+  }
+  const ip = getClientIp(req);
+  if (!checkSuggestionRate(ip)) {
+    sendJson(res, 429, { error: 'Too many submissions. Please wait a minute and try again.' });
+    return;
+  }
+
+  let body;
+  try {
+    body = await readJsonBody(req);
+  } catch (err) {
+    sendJson(res, 400, { error: err.message });
+    return;
+  }
+
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const email = typeof body.email === 'string' ? body.email.trim() : '';
+  const comment = typeof body.comment === 'string' ? body.comment.trim() : '';
+  const honeypot = typeof body.website === 'string' ? body.website : '';
+  const elapsedMs = Number(body.elapsedMs);
+
+  if (honeypot) { sendJson(res, 200, { ok: true }); return; }
+  if (!Number.isFinite(elapsedMs) || elapsedMs < SUGGESTION_MIN_ELAPSED_MS) {
+    sendJson(res, 400, { error: 'Form submitted too quickly. Please try again.' });
+    return;
+  }
+  if (!name || name.length > SUGGESTION_MAX_NAME) {
+    sendJson(res, 400, { error: 'Name is required (and must be under 120 characters).' });
+    return;
+  }
+  if (!comment || comment.length > SUGGESTION_MAX_COMMENT) {
+    sendJson(res, 400, { error: 'Comment is required (and must be under 4000 characters).' });
+    return;
+  }
+  if (email) {
+    if (email.length > SUGGESTION_MAX_EMAIL || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      sendJson(res, 400, { error: 'Email is invalid. Leave it blank or correct it.' });
+      return;
+    }
+  }
+
+  if (!RESEND_API_KEY) {
+    console.error('Suggestion email not sent: RESEND_API_KEY env var is missing');
+    sendJson(res, 503, { error: 'Suggestion service is not configured. Please try again later.' });
+    return;
+  }
+
+  const submittedAt = new Date().toISOString();
+  const textBody = [
+    'New suggestion via Primary Care Research Explorer',
+    `Submitted: ${submittedAt}`,
+    `Name: ${name}`,
+    `Email: ${email || '(not provided)'}`,
+    `Source IP: ${ip}`,
+    '',
+    'Comment:',
+    comment,
+  ].join('\n');
+
+  try {
+    const apiRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: RESEND_FROM,
+        to: [SUGGESTION_TO],
+        reply_to: email || undefined,
+        subject: `Suggestion from ${name}`,
+        text: textBody,
+      }),
+    });
+    if (!apiRes.ok) {
+      const errText = await apiRes.text().catch(() => '');
+      console.error(`Suggestion email failed: Resend ${apiRes.status} ${errText}`);
+      sendJson(res, 502, { error: 'Could not send suggestion. Please try again later.' });
+      return;
+    }
+    sendJson(res, 200, { ok: true });
+  } catch (err) {
+    console.error(`Suggestion email failed: ${err.message}`);
+    sendJson(res, 502, { error: 'Could not send suggestion. Please try again later.' });
+  }
+}
+
 initializePracticeDataset();
 
 supportDatasetHydrationPromise = hydrateSupportDatasets().catch((error) => {
@@ -1178,6 +1327,15 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     await handleRefreshPracticeData(req, res);
+    return;
+  }
+
+  if (parsedUrl.pathname === '/api/suggestion') {
+    if (req.method !== 'POST') {
+      sendJson(res, 405, { error: 'Method not allowed' });
+      return;
+    }
+    await handleSuggestion(req, res);
     return;
   }
 

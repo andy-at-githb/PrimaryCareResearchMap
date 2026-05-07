@@ -1,7 +1,7 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const NHS_GP_SEARCH = 'https://www.nhs.uk/service-search/find-a-gp/';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const APP_ASSET_VERSION = '2026-05-05g';
+const APP_ASSET_VERSION = '2026-05-07c';
 const APP_RELEASE_MONTH = 'May 2026';
 const CLEAN_MAP_ASSET_URL = `./assets/UK_CRDC_Map_clean.png?v=${APP_ASSET_VERSION}`;
 const INDUSTRY_ORGANISATIONS_URL = `./industry-pharma-organisations.json?v=${APP_ASSET_VERSION}`;
@@ -1630,3 +1630,89 @@ loadCentreRecords().catch((error) => {
     detail: `${error.message}. The app will retry centre lookups when you run a search.`,
   });
 });
+
+(function setupSuggestionForm() {
+  const openButton = document.getElementById('open-suggestion-button');
+  const modal = document.getElementById('suggestion-modal');
+  const form = document.getElementById('suggestion-form');
+  const submitButton = document.getElementById('suggestion-submit');
+  const feedback = document.getElementById('suggestion-feedback');
+  const nameInput = document.getElementById('suggestion-name');
+  const emailInput = document.getElementById('suggestion-email');
+  const commentInput = document.getElementById('suggestion-comment');
+  const honeypotInput = document.getElementById('suggestion-website');
+  if (!openButton || !modal || !form) return;
+
+  let openedAt = 0;
+
+  function setFeedback(message, kind) {
+    feedback.textContent = message || '';
+    feedback.classList.remove('is-error', 'is-success');
+    if (kind === 'error') feedback.classList.add('is-error');
+    if (kind === 'success') feedback.classList.add('is-success');
+  }
+
+  function openModal() {
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden', 'false');
+    openedAt = Date.now();
+    setFeedback('', null);
+    setTimeout(() => nameInput?.focus(), 0);
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  openButton.addEventListener('click', openModal);
+  modal.querySelectorAll('[data-suggestion-close]').forEach((el) => {
+    el.addEventListener('click', closeModal);
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.hidden) closeModal();
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const name = (nameInput.value || '').trim();
+    const email = (emailInput.value || '').trim();
+    const comment = (commentInput.value || '').trim();
+    const honeypot = honeypotInput?.value || '';
+
+    if (!name) { setFeedback('Please enter your name.', 'error'); return; }
+    if (!comment) { setFeedback('Please enter a comment.', 'error'); return; }
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFeedback('Email looks invalid. Leave it blank or correct it.', 'error');
+      return;
+    }
+
+    submitButton.disabled = true;
+    setFeedback('Sending…', null);
+    try {
+      const res = await fetch('/api/suggestion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          comment,
+          website: honeypot,
+          elapsedMs: Date.now() - openedAt,
+        }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFeedback(payload.error || 'Could not send. Please try again later.', 'error');
+        return;
+      }
+      setFeedback('Thanks — your suggestion has been sent.', 'success');
+      form.reset();
+      setTimeout(closeModal, 1200);
+    } catch (err) {
+      setFeedback('Network error. Please try again.', 'error');
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+})();
