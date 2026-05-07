@@ -46,29 +46,27 @@ body {
   position: relative;
 }
 
-.suggestion-prompt {
-  position: absolute;
-  top: 0;
-  right: 0;
-  max-width: 280px;
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.35;
-  color: var(--muted);
-  text-align: right;
-}
-
 .suggestion-button {
-  display: inline-block;
+  display: block;
+  margin: 14px 0 0 auto;
   background: rgba(31, 86, 204, 0.12);
   color: var(--accent);
   border: 1px solid rgba(31, 86, 204, 0.22);
   font-weight: 700;
   font-size: 0.9rem;
   line-height: 1.2;
-  padding: 2px 10px;
+  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
+}
+
+@media (min-width: 861px) {
+  .suggestion-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+  }
 }
 
 .suggestion-button:hover {
