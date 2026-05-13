@@ -1,7 +1,7 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const NHS_GP_SEARCH = 'https://www.nhs.uk/service-search/find-a-gp/';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const APP_ASSET_VERSION = '2026-05-07f';
+const APP_ASSET_VERSION = '2026-05-07g';
 const APP_RELEASE_MONTH = 'May 2026';
 const CLEAN_MAP_ASSET_URL = `./assets/UK_CRDC_Map_clean.png?v=${APP_ASSET_VERSION}`;
 const INDUSTRY_ORGANISATIONS_URL = `./industry-pharma-organisations.json?v=${APP_ASSET_VERSION}`;

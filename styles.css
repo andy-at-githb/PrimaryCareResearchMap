@@ -47,7 +47,8 @@ body {
 }
 
 .suggestion-button {
-  display: block;
+  /* TEMPORARILY HIDDEN — email delivery being fixed. To re-enable, remove the next line. */
+  display: none !important;
   margin: 14px 0 0 auto;
   background: rgba(31, 86, 204, 0.12);
   color: var(--accent);
