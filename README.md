@@ -43,6 +43,9 @@ This is a lightweight local web app for the GP-level research map.
 - `data/gp-reg-pat-prac-map_2026-04.csv`: latest downloaded official GP-practice mapping snapshot currently active
 - `data/academic-primary-care-institutions.json`: academic primary care institution dataset used for the `Universities` map layer
 - `data/secondary-care-ctus.json`: secondary-care CTU dataset used for the `Nearest SC-CTU` box, map layer, and directory list
+- `CHANGELOG.md`: shared running change log for Codex and Claude handoff
+- `archive-version.sh`: archives the current app version into `archive/v<version>`
+- `deploy.sh`: syncs `render-upload`, commits it, and pushes it to GitHub
 - `smoke-test.js`: lightweight endpoint smoke test for local or hosted app verification
 - `sync-render-upload.sh`: syncs the app files, assets, and datasets into the standalone Render upload bundle
 - `README.md`: this file
@@ -246,6 +249,25 @@ If you later want to share it on your network or deploy it behind a proper host,
 HOST=0.0.0.0 PORT=8000 node server.js
 ```
 
+## Change tracking and archives
+
+This app now keeps two simple project-history tools in the live app folder:
+
+- `CHANGELOG.md`
+  - short, human-readable version notes
+  - intended to be updated by either Codex or Claude
+- `archive-version.sh`
+  - creates a version snapshot in `archive/v<version>`
+  - excludes `.env` and `.env.*` so secrets are not copied into archives
+
+Recommended workflow for future changes:
+
+1. make and validate the code changes in the live app folder
+2. update `CHANGELOG.md`
+3. run `./archive-version.sh` before bumping to the next version if you want to snapshot the old version
+4. run `./sync-render-upload.sh`
+5. deploy from `render-upload/`
+
 ### Render host note
 
 For Render deployments, the safest configuration is still:
@@ -272,6 +294,7 @@ npm run smoke:test
 
 By default the script tests:
 - `/healthz`
+- `/api/client-config`
 - seeded practice loading
 - dataset status
 - centre-record loading
@@ -279,6 +302,7 @@ By default the script tests:
 - an ambiguous lookup that should return a shortlist
 - selecting one shortlisted practice by practice code
 - an unknown-practice failure case
+- protected-action token guards for dataset refresh and suggestions
 
 To point the smoke test at a different host:
 
@@ -304,6 +328,30 @@ A health check endpoint is also available at:
 - `/healthz`
 
 For a simple hosted review flow, the cleanest option is to place this app folder in its own GitHub repo and deploy that repo to Render.
+
+## Deploy workflow used here
+
+The current shared-project deploy workflow is:
+
+1. edit the live app here:
+   - `GP level/hub-spoke-app`
+2. sync the GitHub-ready bundle:
+   - `./sync-render-upload.sh`
+3. deploy from:
+   - `GP level/hub-spoke-app/render-upload`
+
+The desktop deploy app currently points into this shared project and runs:
+
+- `GP level/hub-spoke-app/deploy.sh`
+
+That script:
+- syncs `render-upload/` from the live app
+- commits inside `render-upload/`
+- pushes `render-upload/` to GitHub
+
+So yes: the GitHub upload folder used here is the shared copy’s own:
+
+- `GP level/hub-spoke-app/render-upload`
 
 ## Suggested next improvements
 

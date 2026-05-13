@@ -1,10 +1,11 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const NHS_GP_SEARCH = 'https://www.nhs.uk/service-search/find-a-gp/';
 const XLINK_NS = 'http://www.w3.org/1999/xlink';
-const APP_ASSET_VERSION = '2026-05-07h';
+const APP_ASSET_VERSION = '2026-05-13a';
 const APP_RELEASE_MONTH = 'May 2026';
 const CLEAN_MAP_ASSET_URL = `./assets/UK_CRDC_Map_clean.png?v=${APP_ASSET_VERSION}`;
 const INDUSTRY_ORGANISATIONS_URL = `./industry-pharma-organisations.json?v=${APP_ASSET_VERSION}`;
+const CLIENT_CONFIG_URL = '/api/client-config';
 const SVG_VIEWBOX = { width: 1600, height: 1040 };
 const MAP_RECT = { x: 875, y: 76, w: 635, h: 910 };
 const MAP_UNDERLAY_SHIFT_X = 26;
@@ -30,6 +31,7 @@ let secondaryCareCtuRecords = [];
 let industryOrganisationRecords = [];
 let centreRecordsPromise = null;
 let industryOrganisationsPromise = null;
+let clientConfigPromise = null;
 let activeResolveRequestId = 0;
 let industryPopupHideTimer = null;
 
@@ -57,6 +59,7 @@ const state = {
   datasetStatus: null,
   selectedPracticeCode: null,
   directoryFilterQuery: '',
+  clientConfig: null,
 };
 
 const practiceInput = document.querySelector('#practice-input');
@@ -795,6 +798,58 @@ async function loadDatasetStatus() {
   applyDatasetStatus(payload);
 }
 
+async function loadClientConfig(force = false) {
+  if (force) {
+    state.clientConfig = null;
+  }
+  if (!force && state.clientConfig) {
+    return state.clientConfig;
+  }
+  if (!force && clientConfigPromise) {
+    return clientConfigPromise;
+  }
+
+  clientConfigPromise = fetch(CLIENT_CONFIG_URL)
+    .then(async (response) => {
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || 'Protected action config could not be loaded');
+      }
+      state.clientConfig = payload;
+      return payload;
+    })
+    .finally(() => {
+      clientConfigPromise = null;
+    });
+
+  return clientConfigPromise;
+}
+
+async function postWithActionToken(url, { actionKey, body, headers = {} }) {
+  const send = async (forceRefresh = false) => {
+    const clientConfig = await loadClientConfig(forceRefresh);
+    const actionToken = clientConfig?.actionTokens?.[actionKey];
+    if (!actionToken) {
+      throw new Error('Protected action token is unavailable');
+    }
+
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        'X-App-Action-Token': actionToken,
+      },
+      body,
+    });
+  };
+
+  let response = await send(false);
+  if (response.status === 403) {
+    response = await send(true);
+  }
+  return response;
+}
+
 async function refreshDatasetStatus() {
   if (state.datasetStatus?.refresh) {
     applyDatasetStatus({
@@ -807,7 +862,9 @@ async function refreshDatasetStatus() {
     });
   }
 
-  const response = await fetch('/api/refresh-practice-data', { method: 'POST' });
+  const response = await postWithActionToken('/api/refresh-practice-data', {
+    actionKey: 'refreshDataset',
+  });
   const payload = await response.json();
   if (!response.ok || !payload.datasetStatus) {
     throw new Error(payload.error || 'Dataset refresh failed');
@@ -1614,13 +1671,16 @@ window.addEventListener('resize', () => {
   positionIndustryPopup();
 });
 
-Promise.allSettled([loadSeededPracticeNames(), loadDatasetStatus(), loadIndustryOrganisations()]).then((results) => {
-  const [practiceResult, datasetResult] = results;
+Promise.allSettled([loadSeededPracticeNames(), loadDatasetStatus(), loadIndustryOrganisations(), loadClientConfig()]).then((results) => {
+  const [practiceResult, datasetResult, , clientConfigResult] = results;
   if (practiceResult.status === 'rejected') {
     syncStatus({ title: 'Practice list unavailable', detail: 'The app is still usable, but the known practice suggestions could not be loaded.' });
   }
   if (datasetResult.status === 'rejected') {
     syncStatus({ title: 'Dataset status unavailable', detail: 'The app is still usable, but the latest NHS snapshot details could not be loaded.' });
+  }
+  if (clientConfigResult.status === 'rejected') {
+    syncStatus({ title: 'Protected actions unavailable', detail: 'Comment submission and manual dataset refresh are temporarily unavailable.' });
   }
 });
 
@@ -1690,9 +1750,11 @@ loadCentreRecords().catch((error) => {
     submitButton.disabled = true;
     setFeedback('Sending…', null);
     try {
-      const res = await fetch('/api/suggestion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await postWithActionToken('/api/suggestion', {
+        actionKey: 'suggestion',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           name,
           email,
@@ -1710,7 +1772,7 @@ loadCentreRecords().catch((error) => {
       form.reset();
       setTimeout(closeModal, 1200);
     } catch (err) {
-      setFeedback('Network error. Please try again.', 'error');
+      setFeedback(err.message || 'Network error. Please try again.', 'error');
     } finally {
       submitButton.disabled = false;
     }

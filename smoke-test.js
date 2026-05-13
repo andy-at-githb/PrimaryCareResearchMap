@@ -26,6 +26,15 @@ function assert(condition, message) {
   }
 }
 
+function sameOriginHeaders(baseUrl, cookie, extraHeaders = {}) {
+  return {
+    Origin: baseUrl,
+    Referer: `${baseUrl}/`,
+    ...(cookie ? { Cookie: cookie } : {}),
+    ...extraHeaders,
+  };
+}
+
 async function run() {
   const checks = [];
 
@@ -54,6 +63,15 @@ async function run() {
   const sanofi = industryOrganisations.payload.organisations.find((organisation) => organisation.name === 'Sanofi');
   assert(sanofi?.url === 'https://www.sanofi.com/en', 'Sanofi organisation link is incorrect');
   checks.push('industry-organisations');
+
+  const clientConfig = await requestJson('/api/client-config');
+  assert(clientConfig.response.ok, 'Client config endpoint failed');
+  const sessionCookieHeader = clientConfig.response.headers.get('set-cookie');
+  assert(sessionCookieHeader && sessionCookieHeader.includes('pcres_session='), 'Client config did not issue a protected-action session cookie');
+  const sessionCookie = sessionCookieHeader.split(';')[0];
+  assert(clientConfig.payload?.actionTokens?.refreshDataset, 'Client config is missing refresh token');
+  assert(clientConfig.payload?.actionTokens?.suggestion, 'Client config is missing suggestion token');
+  checks.push('client-config');
 
   const seeded = await requestJson('/api/seeded-practices');
   assert(seeded.response.ok, 'Seeded practices endpoint failed');
@@ -110,6 +128,37 @@ async function run() {
   });
   assert(blockedRefresh.response.status === 403, 'Cross-origin manual refresh should be blocked');
   checks.push('refresh-origin-guard');
+
+  const missingTokenRefresh = await requestJson('/api/refresh-practice-data', {
+    method: 'POST',
+    headers: sameOriginHeaders(BASE_URL, sessionCookie),
+  });
+  assert(missingTokenRefresh.response.status === 403, 'Refresh without a protected-action token should be blocked');
+  checks.push('refresh-token-guard');
+
+  const allowedRefresh = await requestJson('/api/refresh-practice-data', {
+    method: 'POST',
+    headers: sameOriginHeaders(BASE_URL, sessionCookie, {
+      'X-App-Action-Token': clientConfig.payload.actionTokens.refreshDataset,
+    }),
+  });
+  assert([200, 502].includes(allowedRefresh.response.status), 'Refresh with a protected-action token should reach the dataset refresh flow');
+  assert(allowedRefresh.payload?.datasetStatus, 'Refresh response should include dataset status');
+  checks.push('refresh-protected-flow');
+
+  const blockedSuggestion = await requestJson('/api/suggestion', {
+    method: 'POST',
+    headers: sameOriginHeaders(BASE_URL, sessionCookie, {
+      'Content-Type': 'application/json',
+    }),
+    body: JSON.stringify({
+      name: 'Smoke Test',
+      comment: 'Token guard check',
+      elapsedMs: 5000,
+    }),
+  });
+  assert(blockedSuggestion.response.status === 403, 'Suggestion without a protected-action token should be blocked');
+  checks.push('suggestion-token-guard');
 
   console.log(`Smoke test passed for ${BASE_URL}`);
   console.log(`Checks: ${checks.join(', ')}`);

@@ -1,4 +1,5 @@
 const http = require('http');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
@@ -27,11 +28,16 @@ const REFRESH_INTERVAL_HOURS = 12;
 const REFRESH_INTERVAL_MS = REFRESH_INTERVAL_HOURS * 60 * 60 * 1000;
 const MANUAL_REFRESH_MIN_INTERVAL_MS = 30 * 1000;
 const FETCH_TIMEOUT_MS = 15 * 1000;
+const ACTION_TOKEN_TTL_MS = 2 * 60 * 60 * 1000;
 const MAX_PRACTICE_NAME_LENGTH = 160;
 const MAX_POSTCODE_LENGTH = 16;
 const MAX_PRACTICE_CODE_LENGTH = 24;
+const SESSION_COOKIE_NAME = 'pcres_session';
+const ACTION_TOKEN_HEADER = 'x-app-action-token';
+const ACTION_TOKEN_VERSION = 'v1';
 const ACADEMIC_INSTITUTIONS_FILE = path.join(DATA_DIR, 'academic-primary-care-institutions.json');
 const SECONDARY_CTU_FILE = path.join(DATA_DIR, 'secondary-care-ctus.json');
+const ACTION_TOKEN_SECRET = process.env.APP_ACTION_SECRET || crypto.randomBytes(32).toString('hex');
 const HTML_CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -333,6 +339,19 @@ function buildResponseHeaders(contentType) {
   return headers;
 }
 
+function appendSetCookieHeader(res, cookieValue) {
+  const current = res.getHeader('Set-Cookie');
+  if (!current) {
+    res.setHeader('Set-Cookie', cookieValue);
+    return;
+  }
+  if (Array.isArray(current)) {
+    res.setHeader('Set-Cookie', [...current, cookieValue]);
+    return;
+  }
+  res.setHeader('Set-Cookie', [current, cookieValue]);
+}
+
 const PUBLIC_FILE_PATHS = new Map([
   ['/', path.join(ROOT, 'index.html')],
   ['/index.html', path.join(ROOT, 'index.html')],
@@ -384,6 +403,83 @@ function getRequestOrigin(req) {
   return `${protocol}://${host}`;
 }
 
+function parseCookies(req) {
+  const header = req.headers.cookie;
+  if (!header) return {};
+
+  return header
+    .split(';')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .reduce((acc, entry) => {
+      const equalsIndex = entry.indexOf('=');
+      if (equalsIndex === -1) return acc;
+      const key = entry.slice(0, equalsIndex).trim();
+      const value = entry.slice(equalsIndex + 1).trim();
+      acc[key] = decodeURIComponent(value);
+      return acc;
+    }, {});
+}
+
+function createSessionCookieValue(sessionId) {
+  const parts = [
+    `${SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Strict',
+  ];
+  if (RUNNING_ON_RENDER) {
+    parts.push('Secure');
+  }
+  return parts.join('; ');
+}
+
+function ensureRequestSession(req, res) {
+  const existing = parseCookies(req)[SESSION_COOKIE_NAME];
+  if (existing && /^[A-Za-z0-9_-]{20,}$/.test(existing)) {
+    return existing;
+  }
+
+  const sessionId = crypto.randomBytes(18).toString('base64url');
+  appendSetCookieHeader(res, createSessionCookieValue(sessionId));
+  return sessionId;
+}
+
+function createActionToken(sessionId, action) {
+  const issuedAt = Date.now();
+  const payload = `${ACTION_TOKEN_VERSION}.${action}.${issuedAt}`;
+  const signature = crypto.createHmac('sha256', ACTION_TOKEN_SECRET)
+    .update(`${sessionId}:${payload}`)
+    .digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function verifyActionToken(token, sessionId, action) {
+  if (!token || !sessionId) return false;
+
+  const parts = String(token).split('.');
+  if (parts.length !== 4) return false;
+  const [version, tokenAction, issuedAtRaw, providedSignature] = parts;
+  if (version !== ACTION_TOKEN_VERSION || tokenAction !== action) return false;
+
+  const issuedAt = Number(issuedAtRaw);
+  if (!Number.isFinite(issuedAt)) return false;
+  if (Math.abs(Date.now() - issuedAt) > ACTION_TOKEN_TTL_MS) return false;
+
+  const payload = `${version}.${tokenAction}.${issuedAtRaw}`;
+  const expectedSignature = crypto.createHmac('sha256', ACTION_TOKEN_SECRET)
+    .update(`${sessionId}:${payload}`)
+    .digest('base64url');
+
+  const providedBuffer = Buffer.from(providedSignature);
+  const expectedBuffer = Buffer.from(expectedSignature);
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(providedBuffer, expectedBuffer);
+}
+
 function isSameOriginRequest(req) {
   const expectedOrigin = getRequestOrigin(req);
   if (!expectedOrigin) {
@@ -405,6 +501,30 @@ function isSameOriginRequest(req) {
   } catch (_) {
     return false;
   }
+}
+
+function hasTrustedFetchMetadata(req) {
+  const fetchSite = String(req.headers['sec-fetch-site'] || '').trim().toLowerCase();
+  if (!fetchSite) {
+    return true;
+  }
+  return fetchSite === 'same-origin' || fetchSite === 'same-site' || fetchSite === 'none';
+}
+
+function requireProtectedAction(req, res, action) {
+  if (!isSameOriginRequest(req) || !hasTrustedFetchMetadata(req)) {
+    sendJson(res, 403, { error: 'Protected action request validation failed.' });
+    return false;
+  }
+
+  const sessionId = parseCookies(req)[SESSION_COOKIE_NAME];
+  const actionToken = req.headers[ACTION_TOKEN_HEADER];
+  if (!verifyActionToken(actionToken, sessionId, action)) {
+    sendJson(res, 403, { error: 'Protected action token is missing or invalid.' });
+    return false;
+  }
+
+  return true;
 }
 
 function isSafeHttpUrl(value) {
@@ -1100,9 +1220,18 @@ async function handleDatasetStatus(res) {
   sendJson(res, 200, buildDatasetStatusPayload());
 }
 
+async function handleClientConfig(req, res) {
+  const sessionId = ensureRequestSession(req, res);
+  sendJson(res, 200, {
+    actionTokens: {
+      refreshDataset: createActionToken(sessionId, 'refresh-dataset'),
+      suggestion: createActionToken(sessionId, 'suggestion'),
+    },
+  });
+}
+
 async function handleRefreshPracticeData(req, res) {
-  if (!isSameOriginRequest(req)) {
-    sendJson(res, 403, { error: 'Manual dataset refresh is only allowed from the app origin' });
+  if (!requireProtectedAction(req, res, 'refresh-dataset')) {
     return;
   }
 
@@ -1141,7 +1270,7 @@ const suggestionRateLog = new Map();
 
 function getClientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
-  if (typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
+  if (RUNNING_ON_RENDER && typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
   return req.socket?.remoteAddress || 'unknown';
 }
 
@@ -1186,8 +1315,7 @@ async function readJsonBody(req, maxBytes = 16 * 1024) {
 }
 
 async function handleSuggestion(req, res) {
-  if (!isSameOriginRequest(req)) {
-    sendJson(res, 403, { error: 'Suggestion submissions are only allowed from the app origin' });
+  if (!requireProtectedAction(req, res, 'suggestion')) {
     return;
   }
   const ip = getClientIp(req);
@@ -1336,6 +1464,15 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     await handleSuggestion(req, res);
+    return;
+  }
+
+  if (parsedUrl.pathname === '/api/client-config') {
+    if (req.method !== 'GET') {
+      sendJson(res, 405, { error: 'Method not allowed' });
+      return;
+    }
+    await handleClientConfig(req, res);
     return;
   }
 
