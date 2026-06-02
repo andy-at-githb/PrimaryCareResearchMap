@@ -261,6 +261,7 @@ let practiceSuggestions = [];
 let datasetRefreshPromise = null;
 let supportDatasetHydrationPromise = null;
 const postcodeGeoCache = new Map();
+const MAX_POSTCODE_CACHE = 5000;
 
 const datasetState = {
   current: null,
@@ -847,6 +848,10 @@ async function geocodePostcode(postcode) {
     throw new Error(payload.error || 'Postcode lookup failed');
   }
 
+  if (postcodeGeoCache.size >= MAX_POSTCODE_CACHE) {
+    const oldestKey = postcodeGeoCache.keys().next().value;
+    if (oldestKey !== undefined) postcodeGeoCache.delete(oldestKey);
+  }
   postcodeGeoCache.set(normalizedPostcode, payload.result);
   return payload.result;
 }
@@ -1056,7 +1061,11 @@ async function refreshPracticeDataset({ reason = 'manual' } = {}) {
   return datasetRefreshPromise;
 }
 
-async function handleResolvePractice(res, parsedUrl) {
+async function handleResolvePractice(req, res, parsedUrl) {
+  if (!isWithinRateLimit(resolveRateLog, getClientIp(req), RESOLVE_RATE_WINDOW_MS, RESOLVE_RATE_MAX)) {
+    sendJson(res, 429, { error: 'Too many lookups. Please wait a moment and try again.' });
+    return;
+  }
   const practice = parsedUrl.searchParams.get('practice')?.trim();
   const postcodeOverride = parsedUrl.searchParams.get('postcode')?.trim();
   const practiceCode = parsedUrl.searchParams.get('practiceCode')?.trim();
@@ -1267,6 +1276,9 @@ const SUGGESTION_MAX_NAME = 120;
 const SUGGESTION_MAX_EMAIL = 160;
 const SUGGESTION_MAX_COMMENT = 4000;
 const suggestionRateLog = new Map();
+const RESOLVE_RATE_WINDOW_MS = 60 * 1000;
+const RESOLVE_RATE_MAX = 40;
+const resolveRateLog = new Map();
 
 function getClientIp(req) {
   const fwd = req.headers['x-forwarded-for'];
@@ -1274,17 +1286,16 @@ function getClientIp(req) {
   return req.socket?.remoteAddress || 'unknown';
 }
 
-function checkSuggestionRate(ip) {
+function isWithinRateLimit(log, ip, windowMs, max) {
   const now = Date.now();
-  const log = suggestionRateLog.get(ip) || [];
-  const recent = log.filter((t) => now - t < SUGGESTION_RATE_WINDOW_MS);
-  if (recent.length >= SUGGESTION_RATE_MAX) return false;
+  const recent = (log.get(ip) || []).filter((t) => now - t < windowMs);
+  if (recent.length >= max) return false;
   recent.push(now);
-  suggestionRateLog.set(ip, recent);
-  if (suggestionRateLog.size > 1000) {
-    for (const [key, entries] of suggestionRateLog) {
-      if (!entries.length || now - entries[entries.length - 1] > SUGGESTION_RATE_WINDOW_MS * 5) {
-        suggestionRateLog.delete(key);
+  log.set(ip, recent);
+  if (log.size > 1000) {
+    for (const [key, entries] of log) {
+      if (!entries.length || now - entries[entries.length - 1] > windowMs * 5) {
+        log.delete(key);
       }
     }
   }
@@ -1319,7 +1330,7 @@ async function handleSuggestion(req, res) {
     return;
   }
   const ip = getClientIp(req);
-  if (!checkSuggestionRate(ip)) {
+  if (!isWithinRateLimit(suggestionRateLog, ip, SUGGESTION_RATE_WINDOW_MS, SUGGESTION_RATE_MAX)) {
     sendJson(res, 429, { error: 'Too many submissions. Please wait a minute and try again.' });
     return;
   }
@@ -1410,15 +1421,25 @@ supportDatasetHydrationPromise = hydrateSupportDatasets().catch((error) => {
   console.warn(`Support dataset coordinate hydration failed: ${error.message}`);
 });
 
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason instanceof Error ? reason.message : reason);
+});
+
 const server = http.createServer(async (req, res) => {
-  const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  } catch (_) {
+    sendJson(res, 400, { error: 'Bad request' });
+    return;
+  }
 
   if (parsedUrl.pathname === '/api/resolve-practice') {
     if (req.method !== 'GET') {
       sendJson(res, 405, { error: 'Method not allowed' });
       return;
     }
-    await handleResolvePractice(res, parsedUrl);
+    await handleResolvePractice(req, res, parsedUrl);
     return;
   }
 

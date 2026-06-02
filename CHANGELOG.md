@@ -12,6 +12,12 @@ Update rule:
 - keep entries short and practical
 - note security, deployment, data, and UI changes that will matter later
 
+## v3.18.0 - 2026-06-02
+- Security: fixed a remote crash — a malformed `Host` header made `new URL()` throw outside any handler, which on Node 18+ terminated the process. The request handler now guards URL parsing (returns 400) and an `unhandledRejection` handler keeps the process alive.
+- Security/abuse: added a per-IP rate limit (40/min) to `/api/resolve-practice` and bounded the in-memory postcode geocode cache (max 5000, FIFO eviction) to prevent unbounded memory growth.
+- Internal: de-duplicated the rate-limit logic into a shared `isWithinRateLimit()` helper (used by both the suggestion and resolve endpoints).
+- Note: set `APP_ACTION_SECRET` in the Render dashboard so action tokens stay valid across restarts/instances.
+
 ## v3.17.0 - 2026-05-13
 
 - fixed the archive workflow so `.env` secrets are no longer copied into version archives
