@@ -32,6 +32,92 @@ body {
   padding: 32px 28px 40px;
 }
 
+.project-status-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(31, 86, 204, 0.12);
+  border-bottom: 1px solid rgba(31, 86, 204, 0.22);
+  color: var(--accent);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.project-status-banner[hidden] {
+  display: none;
+}
+
+.project-status-banner-inner {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 14px 48px 14px 28px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.project-status-banner-text {
+  flex: 1;
+}
+
+.project-status-banner-heading {
+  margin: 0 0 4px 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.project-status-banner-body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.project-status-banner-body strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.project-status-banner-date {
+  font-style: italic;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.project-status-banner-dismiss {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.project-status-banner-dismiss:hover {
+  background: rgba(31, 86, 204, 0.18);
+}
+
+@media (max-width: 640px) {
+  .project-status-banner-inner {
+    padding: 12px 44px 12px 16px;
+  }
+  .project-status-banner-heading {
+    font-size: 0.95rem;
+  }
+  .project-status-banner-body {
+    font-size: 0.85rem;
+  }
+}
+
 .page-header,
 .control-panel,
 .summary-card,
