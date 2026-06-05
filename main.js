@@ -1780,25 +1780,13 @@ loadCentreRecords().catch((error) => {
 })();
 
 (function initProjectStatusBanner() {
-  const STORAGE_KEY = 'project-status-banner-dismissed-v2';
   const banner = document.getElementById('project-status-banner');
   const dismissButton = document.getElementById('dismiss-status-banner');
   if (!banner || !dismissButton) return;
-  let dismissed = false;
-  try {
-    dismissed = window.localStorage.getItem(STORAGE_KEY) === 'true';
-  } catch (e) {
-    dismissed = false;
-  }
-  if (!dismissed) {
-    banner.hidden = false;
-  }
+  // Banner shows on every page load. Dismiss hides it for the current view
+  // only — it is NOT persisted, so a refresh or revisit shows it again.
+  banner.hidden = false;
   dismissButton.addEventListener('click', () => {
     banner.hidden = true;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, 'true');
-    } catch (e) {
-      // localStorage unavailable (e.g. private mode) — banner stays gone for this session only
-    }
   });
 })();
